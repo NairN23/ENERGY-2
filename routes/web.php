@@ -41,3 +41,8 @@ Route::get('/contacto', function () {
 Route::get('/terminos', function () {
     return view('terminos');
 });
+
+// Ruta para la pantalla de acceso de usuarios
+Route::get('/login', function () {
+    return view('login');
+});

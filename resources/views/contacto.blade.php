@@ -40,7 +40,7 @@
         /* Estilo de los iconos de información (teléfono, sobre, etc.) */
         .info-icon { font-size: 1.5rem; color: #333; margin-right: 15px; }
 
-        /* Links de navegación */
+        /* Links de navegación heredados del diseño original de esta vista. */
         .nav-link { 
             color: #333 !important; 
             font-size: 0.85rem; 
@@ -49,45 +49,21 @@
             padding-bottom: 5px;
         }
         .nav-link:hover { color: #ff0000 !important; }
+
+        /* Hace visible el aviso temporal directamente dentro del formulario de contacto. */
+        .contact-inline-alert {
+            display: none;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 0, 0, 0.2);
+            background-color: #fff5f5;
+            color: #7a1c1c;
+        }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top py-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/">
-                ENERGY <span class="fw-light small text-muted text-uppercase" style="font-size: 0.7rem;">Sports Nutrition</span>
-            </a>
-
-            <div class="collapse navbar-collapse justify-content-center">
-                <ul class="navbar-nav gap-3">
-                    <li class="nav-item">
-                        <a class="nav-link fw-bold small {{ Request::is('/') ? 'text-danger border-bottom border-danger' : '' }}" href="/">Principal</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-bold small {{ Request::is('catalogo') ? 'text-danger border-bottom border-danger' : '' }}" href="/catalogo">Catálogo</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-bold small {{ Request::is('quienes-somos') ? 'text-danger border-bottom border-danger' : '' }}" href="/quienes-somos">Quiénes Somos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-bold small {{ Request::is('comercializacion') ? 'text-danger border-bottom border-danger' : '' }}" href="/comercializacion">Comercialización</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-bold small {{ Request::is('contacto') ? 'text-danger border-bottom border-danger' : '' }}" href="/contacto">Contacto</a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="d-flex align-items-center gap-3">
-                <i class="bi bi-person fs-5"></i>
-                <div class="position-relative">
-                    <i class="bi bi-cart3 fs-5"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.5rem;">0</span>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- Monta el navbar centralizado para conservar enlaces e interaccion responsive. -->
+    @include('partials.navbar')
 
     <div class="container py-5 mt-4">
         <div class="row g-5">
@@ -99,15 +75,15 @@
                 
                 <div class="d-flex align-items-center mb-4">
                     <i class="bi bi-telephone info-icon"></i>
-                    <span class="fw-semibold">+54 9 379 407-2323</span>
+                    <span class="fw-semibold">Teléfono: 3794576548</span>
                 </div>
                 <div class="d-flex align-items-center mb-4">
                     <i class="bi bi-envelope info-icon"></i>
-                    <span class="fw-semibold">ventas@energy.com.ar</span>
+                    <span class="fw-semibold">Sitio web: www.energy.com.ar</span>
                 </div>
                 <div class="d-flex align-items-center mb-4">
                     <i class="bi bi-geo-alt info-icon"></i>
-                    <span class="fw-semibold">Hipólito Yrigoyen 630, Corrientes, Argentina</span>
+                    <span class="fw-semibold">Domicilio: Salta 560, Corrientes Capital</span>
                 </div>
                 <div class="d-flex align-items-center mb-4">
                     <i class="bi bi-instagram info-icon"></i>
@@ -116,7 +92,7 @@
             </div>
 
             <div class="col-md-7">
-                <form action="#" method="POST">
+                <form id="contactUnderConstructionForm" action="#" method="POST">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre</label>
                         <input type="text" class="form-control" placeholder="ej.: María Perez">
@@ -133,6 +109,9 @@
                         <label class="form-label fw-bold">Mensaje</label>
                         <textarea class="form-control" rows="5" placeholder="ej.: Tu mensaje"></textarea>
                     </div>
+                    <div id="contactConstructionAlert" class="alert contact-inline-alert mb-4" role="alert">
+                        La sección de inicio de sesión todavía está en construcción.
+                    </div>
                     <button type="submit" class="btn btn-enviar">ENVIAR</button>
                 </form>
             </div>
@@ -140,5 +119,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Intercepta el submit del formulario hasta que exista el envío real de contacto.
+        document.getElementById('contactUnderConstructionForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            document.getElementById('contactConstructionAlert').style.display = 'block';
+        });
+    </script>
 </body>
 </html>

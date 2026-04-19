@@ -37,6 +37,21 @@
             color: #666;
             line-height: 1.6;
             font-size: 0.95rem;
+            margin-bottom: 0.85rem;
+        }
+
+        /* Lista los subpuntos legales con la misma lectura ligera del resto del texto. */
+        .term-item ul {
+            color: #666;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            padding-left: 1.2rem;
+            margin-bottom: 0.85rem;
+        }
+
+        /* Destaca cada inciso secundario sin romper la jerarquía del documento. */
+        .term-item li + li {
+            margin-top: 0.5rem;
         }
 
         /* Estilos de la barra de navegación */
@@ -49,29 +64,8 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top py-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/">
-                ENERGY <span class="fw-light small text-muted text-uppercase" style="font-size: 0.7rem;">Sports Nutrition</span>
-            </a>
-
-            <div class="collapse navbar-collapse justify-content-center">
-                <ul class="navbar-nav gap-3">
-                    <li class="nav-item"><a class="nav-link fw-bold small text-uppercase" href="/">Principal</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold small text-uppercase" href="/catalogo">Catálogo</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold small text-uppercase" href="/quienes-somos">Quiénes Somos</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold small text-uppercase" href="/comercializacion">Comercialización</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold small text-uppercase" href="/contacto">Contacto</a></li>
-                    <li class="nav-item"><a class="nav-link fw-bold small text-uppercase active-page" href="/terminos">Términos y Uso</a></li>
-                </ul>
-            </div>
-
-            <div class="d-flex align-items-center gap-3">
-                <i class="bi bi-person fs-5"></i>
-                <i class="bi bi-cart3 fs-5"></i>
-            </div>
-        </div>
-    </nav>
+    <!-- Inserta el navbar unificado para mantener consistencia visual y funcional. -->
+    @include('partials.navbar')
 
     <div class="container py-5">
         <div class="text-center mb-5">
@@ -83,23 +77,77 @@
                 <div class="terms-card">
                     
                     <div class="term-item mb-5">
-                        <h5>1. Aceptación de Términos</h5>
-                        <p>Al acceder y utilizar este sitio web de ENERGY, usted acepta estar sujeto a los siguientes términos y condiciones de uso. Si no está de acuerdo con alguna parte de estos términos, no debe utilizar nuestro sitio web.</p>
+                        <h5>1. Información General y Titularidad</h5>
+                        <p>1.1 Los presentes Términos y Condiciones generales son aplicables para la navegación y compra de productos en el sitio www.energy.com.ar, en adelante, el Sitio.</p>
+                        <p>1.2 El Sitio es administrado y operado por Nahuel López, con CUIT 23-38343565-9, con domicilio legal en la calle Salta 560, Corrientes Capital, Provincia de Corrientes, en adelante referido como Energy.</p>
+                        <p>1.3 A través del Sitio, Energy publica, publicita y ofrece para la venta suplementos y productos de las marcas ENA Sport, Star Nutrition, HTN, GenTech, Xtrenght, Optimum Nutrition, Gold Nutrition, BPI Sports y SPX Supplements, entre otras.</p>
                     </div>
 
                     <div class="term-item mb-5">
-                        <h5>2. Uso de Productos</h5>
-                        <p>Los suplementos comercializados por ENERGY están destinados a personas adultas sanas. Recomendamos encarecidamente consultar con un profesional de la salud antes de comenzar cualquier régimen de suplementación deportiva.</p>
+                        <h5>2. Aceptación de los Términos</h5>
+                        <p>2.1 El acceso y uso del Sitio implica el conocimiento y la aceptación de los presentes Términos y Condiciones. Si el usuario no está de acuerdo, deberá abstenerse de utilizar el Sitio.</p>
+                        <p>2.2 Para realizar compras, el usuario debe ser mayor de 18 años y registrarse con datos veraces y actualizados.</p>
                     </div>
 
                     <div class="term-item mb-5">
-                        <h5>3. Propiedad Intelectual</h5>
-                        <p>Todo el contenido presente en este sitio, incluyendo logotipos, textos, imágenes y diseños, es propiedad exclusiva de ENERGY y está protegido por las leyes vigentes.</p>
+                        <h5>3. Registro y Seguridad de la Cuenta</h5>
+                        <p>3.1 El registro es gratuito. El usuario es el único responsable de la confidencialidad de su nombre de usuario y contraseña.</p>
+                        <p>3.2 Energy se reserva el derecho de suspender temporal o definitivamente las cuentas cuyos datos no hayan podido ser verificados o que presenten actividades sospechosas.</p>
+                    </div>
+
+                    <div class="term-item mb-5">
+                        <h5>4. Propiedad Intelectual</h5>
+                        <p>4.1 Todo el contenido del Sitio, incluidos logos, diseños, textos, imágenes de productos y software, es propiedad de Energy o de sus respectivos fabricantes y está protegido por las leyes de propiedad intelectual. Queda prohibida su reproducción sin autorización previa.</p>
+                    </div>
+
+                    <div class="term-item mb-5">
+                        <h5>5. Política de Envíos y Entregas</h5>
+                        <p>5.1 Zonas de envío: Energy realiza envíos a todo el territorio de la República Argentina.</p>
+                        <p>5.2 Métodos de envío:</p>
+                        <ul>
+                            <li>Corrientes Capital: Los envíos se realizan vía MotoUber o servicio de mensajería privada. Las entregas se coordinan para el mismo día de la compra, sujetas a disponibilidad y horario comercial.</li>
+                            <li>Resto del país: Los envíos se realizan a través de Correo Argentino.</li>
+                        </ul>
+                        <p>5.3 Tiempos de entrega: Para envíos nacionales, los tiempos dependen exclusivamente del prestador logístico, Correo Argentino. Energy no garantiza un plazo exacto de entrega fuera de Corrientes Capital, pero proporcionará la información necesaria para el seguimiento del paquete.</p>
+                        <p>5.4 Costo de envío: El costo será informado al usuario durante el proceso de compra, antes de finalizar el pago.</p>
+                    </div>
+
+                    <div class="term-item mb-5">
+                        <h5>6. Precios y Stock</h5>
+                        <p>6.1 Todos los precios están expresados en pesos argentinos y están sujetos a modificación sin previo aviso.</p>
+                        <p>6.2 Las compras están sujetas a la disponibilidad de stock. En caso de que un producto no esté disponible tras la compra, se ofrecerá al usuario un cambio de producto o la devolución total del dinero.</p>
+                    </div>
+
+                    <div class="term-item mb-5">
+                        <h5>7. Medios de Pago</h5>
+                        <p>7.1 Los pagos se procesan a través de las plataformas habilitadas en el sitio. La transacción se considera confirmada una vez que Energy valide el ingreso de los fondos y emita la factura o comprobante correspondiente.</p>
+                    </div>
+
+                    <div class="term-item mb-5">
+                        <h5>8. Derecho de Arrepentimiento</h5>
+                        <p>8.1 El consumidor tiene derecho a revocar la aceptación de la compra durante el plazo de DIEZ 10 días corridos contados a partir de la entrega del producto.</p>
+                        <p>8.2 Para ejercer este derecho, el producto debe devolverse en perfecto estado, sin haber sido abierto y con sus sellos de seguridad originales intactos, dado que son productos de consumo nutricional. Los gastos de devolución corren por cuenta de Energy siempre que se cumplan estas condiciones.</p>
+                    </div>
+
+                    <div class="term-item mb-5">
+                        <h5>9. Descargo de Responsabilidad</h5>
+                        <p>9.1 Los productos comercializados por Energy son suplementos dietarios y no deben ser utilizados como sustitutos de una dieta equilibrada.</p>
+                        <p>9.2 Se recomienda consultar a un médico o nutricionista antes de comenzar cualquier esquema de suplementación. Energy no se responsabiliza por el uso inadecuado o reacciones alérgicas derivadas de la ingesta de los productos.</p>
+                    </div>
+
+                    <div class="term-item mb-5">
+                        <h5>10. Contacto</h5>
+                        <p>10.1 Ante cualquier duda, consulta o reclamo, los usuarios pueden comunicarse a través de los siguientes canales:</p>
+                        <ul>
+                            <li>Sitio web: www.energy.com.ar</li>
+                            <li>WhatsApp: 3794576548</li>
+                            <li>Domicilio: Salta 560, Corrientes Capital.</li>
+                        </ul>
                     </div>
 
                     <div class="term-item mb-4">
-                        <h5>4. Proceso de Comercialización</h5>
-                        <p>Nuestra plataforma funciona como catálogo digital. La finalización de las órdenes se realiza a través de canales directos (WhatsApp) para garantizar un asesoramiento personal.</p>
+                        <h5>11. Ley Aplicable y Jurisdicción</h5>
+                        <p>11.1 Estos Términos y Condiciones se rigen por las leyes de la República Argentina. Para cualquier conflicto derivado de este contrato, las partes se someten a la jurisdicción de los Tribunales Ordinarios de Corrientes Capital, renunciando a cualquier otro fuero o jurisdicción.</p>
                     </div>
 
                     <hr class="my-5 opacity-25">

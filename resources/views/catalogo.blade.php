@@ -95,41 +95,8 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top py-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/">
-                ENERGY <span class="fw-light small text-muted text-uppercase" style="font-size: 0.7rem;">Sports Nutrition</span>
-            </a>
-
-            <div class="collapse navbar-collapse justify-content-center">
-                <ul class="navbar-nav gap-3">
-                    <li class="nav-item">
-                        <a class="nav-link fw-bold text-uppercase" href="/">Principal</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-bold text-uppercase {{ Request::is('catalogo') ? 'text-danger border-bottom border-danger' : '' }}" href="/catalogo">Catálogo</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-bold text-uppercase" href="/quienes-somos">Quiénes Somos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-bold text-uppercase" href="/comercializacion">Comercialización</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-bold text-uppercase" href="/contacto">Contacto</a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="d-flex align-items-center gap-3">
-                <i class="bi bi-person fs-5"></i>
-                <div class="position-relative">
-                    <i class="bi bi-cart3 fs-5"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.5rem;">0</span>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- Reutiliza el navbar comun para mantener el mismo menu y comportamiento responsive. -->
+    @include('partials.navbar')
 
     <div class="container py-5">
         <div class="catalog-banner mb-5 shadow-sm">
