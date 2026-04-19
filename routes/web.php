@@ -46,3 +46,7 @@ Route::get('/terminos', function () {
 Route::get('/login', function () {
     return view('login');
 });
+
+Route::get('/carrito', function () {
+    return view('carrito');
+});

@@ -136,23 +136,18 @@
     }
 </style>
 
-<!-- Navbar compartido que reutilizan todas las paginas publicas. -->
 <nav class="navbar navbar-expand-xl navbar-light border-bottom sticky-top py-3 energy-navbar">
     <div class="container">
-        <!-- Marca principal del sitio con acceso directo a la portada. -->
         <a class="navbar-brand fw-bold" href="/">
             <span>ENERGY</span>
             <span class="brand-subtitle">Sports Nutrition</span>
         </a>
 
-        <!-- Boton que abre o cierra el menu cuando el navbar entra en modo colapsado. -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Abrir menú de navegación">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <!-- Contenedor colapsable que agrupa enlaces y acciones del encabezado. -->
         <div class="collapse navbar-collapse justify-content-xl-center" id="mainNavbar">
-            <!-- Genera los enlaces a partir del arreglo superior para no repetir markup. -->
             <ul class="navbar-nav energy-nav-list mx-xl-auto">
                 @foreach ($navItems as $item)
                     <li class="nav-item">
@@ -163,16 +158,46 @@
                 @endforeach
             </ul>
 
-            <!-- Accesos rapidos a cuenta y carrito alineados al extremo del navbar. -->
             <div class="d-flex align-items-center gap-3 energy-actions">
                 <a href="/login" class="energy-action-link {{ request()->is('login') ? 'active' : '' }}" aria-label="Ir al login de usuario">
                     <i class="bi bi-person energy-action-icon" aria-hidden="true"></i>
                 </a>
-                <div class="position-relative">
+                <a href="/carrito" class="energy-action-link position-relative" aria-label="Ver carrito de compras">
                     <i class="bi bi-cart3 energy-action-icon" aria-hidden="true"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.5rem;">0</span>
-                </div>
+                    <span id="cart-count-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55rem; display: none;">
+                        0
+                    </span>
+                </a>
             </div>
         </div>
     </div>
 </nav>
+
+<script>
+    /**
+     * Función global para actualizar el contador del carrito en el Navbar.
+     * Lee la clave 'energy_cart' de localStorage.
+     */
+    function syncCartBadge() {
+        const badge = document.getElementById('cart-count-badge');
+        if (badge) {
+            const cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
+            const totalItems = cart.length;
+            
+            badge.innerText = totalItems;
+            
+            // Solo mostramos el badge si hay al menos 1 producto
+            badge.style.display = totalItems > 0 ? 'block' : 'none';
+        }
+    }
+
+    // Inicializar al cargar la página
+    document.addEventListener('DOMContentLoaded', syncCartBadge);
+
+    // Sincronizar entre pestañas abiertas
+    window.addEventListener('storage', (event) => {
+        if (event.key === 'energy_cart') {
+            syncCartBadge();
+        }
+    });
+</script>

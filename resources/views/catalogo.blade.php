@@ -1,156 +1,211 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Energy - Catálogo de Suplementos</title>
-    
+    <title>Energy - Catálogo de Productos</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    
+
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #fcfaf8; /* Fondo apenas cálido para que resalten las tarjetas blancas */
+            background-color: #ffffff;
+            font-family: sans-serif;
+            color: #1a1a1a;
         }
 
-        /* Banner principal del catálogo con imagen oscurecida */
-        .catalog-banner {
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
-                        url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200');
-            background-size: cover;
-            background-position: center;
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-        }
-        .catalog-banner h2 {
-            font-weight: 800;
-            font-style: italic;
-            color: white;
-            text-transform: uppercase;
+        .catalogo-header {
+            border-bottom: 2px solid #000;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
         }
 
-        /* Botones de categorías con estilo de "pastilla" redondeada */
-        .btn-category {
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 8px 20px;
-            text-transform: uppercase;
-            background-color: white;
-            border: 1px solid #eee;
-            color: #333;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            transition: 0.3s;
-        }
-        .btn-category.active, .btn-category:hover {
-            border: 1px solid #ff0000;
-            color: #ff0000;
+        .product-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
         }
 
-        /* Tarjetas de Producto: Sin bordes y con sombra suave */
-        .product-card {
-            border: none;
-            border-radius: 15px;
-            transition: all 0.3s ease;
-            background-color: white;
-        }
-        .product-card:hover {
-            transform: translateY(-5px); /* Efecto de elevación */
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        .product-row:hover {
+            background-color: #f9f9f9;
         }
 
-        /* Contenedor gris para la foto del producto */
-        .img-container {
-            background-color: #f8f9fa;
-            border-radius: 12px;
-            padding: 15px;
-            height: 180px;
+        .product-info {
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 15px;
         }
 
-        /* Etiquetas de categoría y títulos */
-        .category-label {
-            font-size: 0.65rem;
+        .product-name {
             font-weight: 700;
-            color: #999;
             text-transform: uppercase;
-        }
-        .product-title {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #111;
-            height: 38px; /* Altura fija para que todas las cards midan lo mismo */
-            overflow: hidden;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+            margin: 0;
         }
 
-        /* Estilos de la barra de navegación */
-        .nav-link { color: #333 !important; transition: 0.2s; font-size: 0.85rem; }
-        .nav-link:hover { color: #ff0000 !important; }
+        .product-price {
+            font-weight: 800;
+            font-size: 1rem;
+            color: #000;
+        }
+
+        .btn-add-list {
+            background: none;
+            border: none;
+            color: #ff0000;
+            font-size: 1.2rem;
+            padding: 0 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-add-list:hover {
+            transform: scale(1.2);
+        }
+
+        /* Estilo para que se parezca a tu captura */
+        .list-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
     </style>
 </head>
+
 <body>
 
-    <!-- Reutiliza el navbar comun para mantener el mismo menu y comportamiento responsive. -->
     @include('partials.navbar')
 
     <div class="container py-5">
-        <div class="catalog-banner mb-5 shadow-sm">
-            <h2>Nuestros <span class="text-danger">Suplementos</span></h2>
-        </div>
+        <div class="list-container">
 
-        <div class="d-flex flex-wrap justify-content-center gap-2 mb-5">
-            <button class="btn btn-category active">Todos</button>
-            <button class="btn btn-category">Proteínas</button>
-            <button class="btn btn-category">Creatinas</button>
-            <button class="btn btn-category">Ganadores</button>
-            <button class="btn btn-category">Quemadores</button>
-            <button class="btn btn-category">BCAA</button>
-            <button class="btn btn-category">Vitaminas</button>
-            <button class="btn btn-category">Pre-Entreno</button>
-        </div>
+            <div class="catalogo-header d-flex justify-content-between align-items-end">
+                <h2 class="fw-bold text-uppercase m-0">Catálogo <span class="text-danger">2026</span></h2>
+                <small class="text-muted fw-bold text-uppercase">Precios sujetos a stock</small>
+            </div>
 
-        <div class="row row-cols-2 row-cols-md-4 row-cols-lg-6 g-4 mb-5">
-            
-            <div class="col">
-                <div class="card product-card h-100 p-2 shadow-sm">
-                    <div class="img-container">
-                        <img src="https://via.placeholder.com/150" class="img-fluid" alt="Proteina">
+            <div id="productos-lista">
+                <div class="product-row">
+                    <div class="product-info">
+                        <button class="btn-add-list add-to-cart" data-name="Premium Whey Protein Star 2lb"
+                            data-price="38500">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </button>
+                        <h6 class="product-name">Premium Whey Protein Star Nutrition 2lb</h6>
                     </div>
-                    <div class="card-body p-2 mt-2">
-                        <div class="category-label">Proteínas</div>
-                        <h6 class="product-title mt-1">Proteína Star Nutrition 2lb</h6>
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <span class="price-tag fw-bold">$38.500</span>
-                            <button class="btn btn-danger btn-sm rounded-2 fw-bold" style="width: 32px; height: 32px;">+</button>
-                        </div>
+                    <div class="product-price">$38.500</div>
+                </div>
+
+                <div class="product-row">
+                    <div class="product-info">
+                        <button class="btn-add-list add-to-cart" data-name="Creatina Monohidrato HTN 300g"
+                            data-price="24000">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </button>
+                        <h6 class="product-name">Creatina Monohidrato HTN 300g</h6>
                     </div>
+                    <div class="product-price">$24.000</div>
+                </div>
+
+                <div class="product-row">
+                    <div class="product-info">
+                        <button class="btn-add-list add-to-cart" data-name="Iso Whey Protein ENA 2lb"
+                            data-price="42000">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </button>
+                        <h6 class="product-name">Iso Whey Protein ENA 2lb</h6>
+                    </div>
+                    <div class="product-price">$42.000</div>
+                </div>
+
+                <div class="product-row">
+                    <div class="product-info">
+                        <button class="btn-add-list add-to-cart" data-name="Pump V8 Pre-Workout Star"
+                            data-price="19500">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </button>
+                        <h6 class="product-name">Pump V8 Pre-Workout Star Nutrition</h6>
+                    </div>
+                    <div class="product-price">$19.500</div>
+                </div>
+
+                <div class="product-row">
+                    <div class="product-info">
+                        <button class="btn-add-list add-to-cart" data-name="BCAA 2:1:1 Star Nutrition"
+                            data-price="17800">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </button>
+                        <h6 class="product-name">BCAA 2:1:1 Star Nutrition</h6>
+                    </div>
+                    <div class="product-price">$17.800</div>
+                </div>
+
+                <div class="product-row">
+                    <div class="product-info">
+                        <button class="btn-add-list add-to-cart" data-name="Glutamina Micronizada ENA"
+                            data-price="21500">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </button>
+                        <h6 class="product-name">Glutamina Micronizada ENA 250g</h6>
+                    </div>
+                    <div class="product-price">$21.500</div>
+                </div>
+
+                <div class="product-row">
+                    <div class="product-info">
+                        <button class="btn-add-list add-to-cart" data-name="L-Carnitina Liquid Gentech"
+                            data-price="16800">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </button>
+                        <h6 class="product-name">L-Carnitina Liquid 1500 Gentech</h6>
+                    </div>
+                    <div class="product-price">$16.800</div>
+                </div>
+
+                <div class="product-row">
+                    <div class="product-info">
+                        <button class="btn-add-list add-to-cart" data-name="Multivitamínico Daily Complete"
+                            data-price="14500">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </button>
+                        <h6 class="product-name">Multivitamínico Daily Complete</h6>
+                    </div>
+                    <div class="product-price">$14.500</div>
                 </div>
             </div>
 
-            <div class="col">
-                <div class="card product-card h-100 p-2 shadow-sm">
-                    <div class="img-container">
-                        <img src="https://via.placeholder.com/150" class="img-fluid" alt="Creatina">
-                    </div>
-                    <div class="card-body p-2 mt-2">
-                        <div class="category-label">Creatina</div>
-                        <h6 class="product-title mt-1">Creatina Micronizada HTN</h6>
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <span class="price-tag fw-bold">$24.000</span>
-                            <button class="btn btn-danger btn-sm rounded-2 fw-bold" style="width: 32px; height: 32px;">+</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            </div>
+        </div>
     </div>
+
+    @include('partials.footer')
+
+    <script>
+        // Lógica para agregar al carrito (se mantiene igual)
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', () => {
+                const name = button.getAttribute('data-name');
+                const price = button.getAttribute('data-price');
+                let cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
+                cart.push({ name, price });
+                localStorage.setItem('energy_cart', JSON.stringify(cart));
+
+                // Animación simple de confirmación
+                button.innerHTML = '<i class="bi bi-check-circle-fill text-success"></i>';
+                setTimeout(() => {
+                    button.innerHTML = '<i class="bi bi-plus-circle-fill"></i>';
+                }, 1000);
+
+                if (typeof syncCartBadge === 'function') syncCartBadge();
+            });
+        });
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
