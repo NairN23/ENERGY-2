@@ -9,12 +9,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
     <style>
+        /* Estilos de fondo y tipografía */
         body { background-color: #f8f9fa; font-family: sans-serif; color: #333; }
 
-        /* Tarjeta estilo Captura */
+        /* Tarjeta de producto con efectos de transición */
         .product-card {
             border: none;
-            border-radius: 20px; /* Bordes bien redondeados */
+            border-radius: 20px; 
             background-color: #fff;
             transition: all 0.3s ease;
             padding: 20px;
@@ -25,9 +26,9 @@
             box-shadow: 0 15px 30px rgba(0,0,0,0.1);
         }
 
-        /* Contenedor de Imagen */
+        /* Contenedor gris para las imágenes */
         .img-wrapper {
-            background-color: #f4f4f4; /* Fondo gris claro como la captura */
+            background-color: #f4f4f4; 
             border-radius: 15px;
             height: 240px;
             display: flex;
@@ -43,7 +44,7 @@
             object-fit: contain;
         }
 
-        /* Textos */
+        /* Textos y etiquetas */
         .category-tag {
             font-size: 0.7rem;
             font-weight: 800;
@@ -79,9 +80,9 @@
             color: #000;
         }
 
-        /* Botón Añadir (+) */
+        /* Botón de añadir (+) */
         .btn-add {
-            background-color: #ff4d4d; /* Rojo suave de la captura */
+            background-color: #ff4d4d; 
             color: white;
             border: none;
             width: 40px;
@@ -104,13 +105,12 @@
     @include('partials.navbar')
 
     <div class="container py-5">
-        
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
             
             <div class="col">
                 <div class="card product-card shadow-sm h-100">
                     <div class="img-wrapper">
-                        <img src="/images/productos/premium-whey-star.png" alt="Star Nutrition">
+                        <img src="/images/productos/Premium Whey Protein Sta.png" alt="Star Nutrition">
                     </div>
                     <div class="card-body p-0">
                         <span class="category-tag">Proteínas</span>
@@ -129,7 +129,7 @@
             <div class="col">
                 <div class="card product-card shadow-sm h-100">
                     <div class="img-wrapper">
-                        <img src="/images/productos/creatina-htn.png" alt="HTN">
+                        <img src="/images/productos/Creatina Monohidrato.png .png" alt="HTN">
                     </div>
                     <div class="card-body p-0">
                         <span class="category-tag">Fuerza</span>
@@ -148,7 +148,7 @@
             <div class="col">
                 <div class="card product-card shadow-sm h-100">
                     <div class="img-wrapper">
-                        <img src="/images/productos/pump-v8.png" alt="Star Nutrition">
+                        <img src="/images/productos/Pump V8 Pre-Workout Star Nutrition.png" alt="Star Nutrition">
                     </div>
                     <div class="card-body p-0">
                         <span class="category-tag">Pre-Entreno</span>
@@ -167,7 +167,7 @@
             <div class="col">
                 <div class="card product-card shadow-sm h-100">
                     <div class="img-wrapper">
-                        <img src="/images/productos/l-carnitina.png" alt="Quemadores">
+                        <img src="/images/productos/L-Carnitina 1500.png" alt="Gentech">
                     </div>
                     <div class="card-body p-0">
                         <span class="category-tag">Quemadores</span>
@@ -186,7 +186,7 @@
             <div class="col">
                 <div class="card product-card shadow-sm h-100">
                     <div class="img-wrapper">
-                        <img src="/images/productos/bcaa-star.png" alt="Star Nutrition">
+                        <img src="/images/productos/BCAA.png" alt="Star Nutrition">
                     </div>
                     <div class="card-body p-0">
                         <span class="category-tag">Aminoácidos</span>
@@ -205,7 +205,7 @@
             <div class="col">
                 <div class="card product-card shadow-sm h-100">
                     <div class="img-wrapper">
-                        <img src="/images/productos/iso-whey-ena.png" alt="ENA">
+                        <img src="/images/productos/Iso Whey Protein.png" alt="ENA">
                     </div>
                     <div class="card-body p-0">
                         <span class="category-tag">Proteínas</span>
@@ -224,7 +224,7 @@
             <div class="col">
                 <div class="card product-card shadow-sm h-100">
                     <div class="img-wrapper">
-                        <img src="/images/productos/glutamina-ena.png" alt="ENA">
+                        <img src="/images/productos/Glutamina.png" alt="ENA">
                     </div>
                     <div class="card-body p-0">
                         <span class="category-tag">Recuperación</span>
@@ -243,7 +243,7 @@
             <div class="col">
                 <div class="card product-card shadow-sm h-100">
                     <div class="img-wrapper">
-                        <img src="/images/productos/multivitamin.png" alt="Gentech">
+                        <img src="/images/productos/Multivitamínico .png" alt="Gentech">
                     </div>
                     <div class="card-body p-0">
                         <span class="category-tag">Salud</span>
@@ -265,6 +265,10 @@
     @include('partials.footer')
 
     <script>
+        /**
+         * Lógica del carrito:
+         * Guarda en el LocalStorage el nombre y precio del producto al hacer clic.
+         */
         document.querySelectorAll('.add-to-cart').forEach(button => {
             button.addEventListener('click', () => {
                 const name = button.getAttribute('data-name');
@@ -272,14 +276,11 @@
                 let cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
                 cart.push({ name, price });
                 localStorage.setItem('energy_cart', JSON.stringify(cart));
-                
                 if (typeof syncCartBadge === 'function') syncCartBadge();
-                
                 alert('¡' + name + ' agregado!');
             });
         });
     </script>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

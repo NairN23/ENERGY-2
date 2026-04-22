@@ -12,14 +12,14 @@
         /* Tipografía general y fondo limpio */
         body { font-family: sans-serif; background-color: #fff; }
         
-        /* Color rojo característico de ENERGY */
+        /* Estilos de identidad visual: rojo ENERGY y texto en itálica */
         .text-danger { color: #ff0000 !important; }
         .italic { font-style: italic; }
         
-        /* Sombra personalizada para las imágenes */
+        /* Sombra personalizada para dar profundidad a las imágenes de la sección */
         .shadow-custom { box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
 
-        /* Unifica los textos corrientes marcados en negro con el mismo tamaño y lectura. */
+        /* Estilos para los párrafos de texto: mejora la legibilidad con interlineado alto */
         .about-text {
             color: #111111;
             font-size: 1.05rem;
@@ -27,7 +27,7 @@
             font-weight: 400;
         }
 
-        /* Mantiene el mismo estilo en los textos descriptivos de cada bloque. */
+        /* Clase para asegurar que las copias descriptivas hereden los estilos del contenedor padre */
         .about-copy {
             color: inherit;
             font-size: inherit;
@@ -35,25 +35,25 @@
             font-weight: inherit;
         }
 
-        /* Reduce levemente el tamaño de los títulos laterales para que respiren mejor junto a la imagen. */
+        /* Ajustes de los títulos laterales: equilibrio visual con las fotos */
         .about-section-title {
             font-size: 1.55rem;
             line-height: 1.15;
         }
 
-        /* Hace que cada bloque de contenido y su imagen compartan la misma altura visual. */
+        /* Alineación 'stretch' para que las columnas de texto e imagen midan lo mismo */
         .about-row {
             align-items: stretch;
         }
 
-        /* Permite que la imagen ocupe todo el alto disponible de su columna. */
+        /* Propiedad 'cover' para que las imágenes cubran su contenedor sin deformarse */
         .about-image {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
 
-        /* Estira y centra verticalmente el contenido textual para acompañar la altura de la imagen. */
+        /* Centrado vertical del contenido textual para acompañar la altura de la imagen */
         .about-content {
             height: 100%;
             display: flex;
@@ -61,15 +61,15 @@
             justify-content: center;
         }
 
+        /* Ajustes para dispositivos móviles (quitar altura fija para evitar desbordes) */
         @media (max-width: 767.98px) {
-            /* En mobile devuelve el comportamiento natural para evitar bloques demasiado altos. */
             .about-content {
                 height: auto;
                 margin-top: 1.5rem;
             }
         }
 
-        /* Estilos de la barra de navegación */
+        /* Estilos de los enlaces de navegación */
         .nav-link { 
             transition: 0.2s; 
             padding-bottom: 5px; 
@@ -81,7 +81,6 @@
 </head>
 <body>
 
-    <!-- Usa el parcial del navbar para compartir el encabezado con el resto del sitio. -->
     @include('partials.navbar')
 
     <div class="container py-5">

@@ -4,57 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Energy - Comercialización</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
     <style>
+        /* Fondo general de la página en blanco puro */
         body { background-color: #ffffff; }
         
-        /* Estilo para los números grandes de fondo */
+        /* Estilo para los números grandes decorativos que aparecen detrás del texto de cada paso */
         .step-number {
             font-size: 4.5rem;
             font-weight: 800;
             color: #000;
-            opacity: 0.05;
+            opacity: 0.05; /* Muy transparente para que no dificulte la lectura del texto principal */
             line-height: 1;
-            position: absolute;
+            position: absolute; /* Posicionamiento absoluto respecto a la tarjeta (card) */
             top: 20px;
             left: 20px;
         }
 
-        /* Card del medio (Paso 02) con borde rojo */
+        /* Clase específica para resaltar la tarjeta del paso 02 con un borde rojo característico */
         .card-highlight {
             border: 1px solid #ff0000 !important;
         }
 
+        /* Color rojo corporativo personalizado para textos resaltados */
         .text-danger-custom { color: #ff0000; }
         
-        /* Caja de métodos de pago */
+        /* Estenedor para la sección de métodos de pago con bordes muy redondeados */
         .payment-box {
             border-radius: 40px;
             border: 1px solid #f0f0f0;
-            overflow: hidden;
+            overflow: hidden; /* Asegura que la imagen respete el redondeado del contenedor */
             background-color: #fff;
         }
 
-        /* Hace que la imagen de medios de pago se adapte al ancho del contenedor. */
+        /* Hace que la imagen de medios de pago ocupe todo el ancho disponible sin deformarse */
         .payment-box-image {
             display: block;
             width: 100%;
             height: auto;
         }
 
-        /* Ajusta el tamaño del icono del primer paso sin competir con el título. */
+        /* Configuración de tamaño y alineación para los iconos ilustrativos de cada paso */
         .step-icon {
             width: 92px;
             height: auto;
             display: block;
-            margin: 1rem auto 0;
+            margin: 1rem auto 0; /* Centrado horizontal con margen superior */
         }
     </style>
 </head>
 <body>
 
-    <!-- Carga el navbar compartido para evitar duplicar estructura y estilos del encabezado. -->
     @include('partials.navbar')
 
     <div class="container py-5">
@@ -64,6 +67,7 @@
         </div>
 
         <div class="row g-4 mb-5">
+            
             <div class="col-md-4">
                 <div class="card h-100 border-0 shadow-sm p-4 rounded-4 position-relative">
                     <div class="step-number">01</div>

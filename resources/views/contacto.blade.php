@@ -19,10 +19,10 @@
             transition: 0.3s;
         }
         
-        /* Validación Visual: Rojo si está mal, Verde si está bien */
+        /* Validación Visual */
         .form-control:focus { background-color: #fff; border-color: #ff0000; box-shadow: none; }
-        .form-control.is-invalid { border-color: #dc3545; background-color: #fff8f8; }
-        .form-control.is-valid { border-color: #198754; background-color: #f8fff8; }
+        .form-control.is-invalid { border-color: #dc3545 !important; background-color: #fff8f8; }
+        .form-control.is-valid { border-color: #198754 !important; background-color: #f8fff8; }
         
         .btn-enviar { 
             background-color: #ff0000; 
@@ -66,17 +66,19 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold small">NOMBRE</label>
                         <input type="text" id="nombre" class="form-control" placeholder="Tu nombre completo" required>
+                        <div class="invalid-feedback">Solo se permiten letras en este campo.</div>
                     </div>
                     
                     <div class="mb-3">
                         <label class="form-label fw-bold small">EMAIL</label>
                         <input type="email" id="email" class="form-control" placeholder="ejemplo@gmail.com" required>
-                        <div class="invalid-feedback">El correo no parece real o le falta el @.</div>
+                        <div class="invalid-feedback">Ingresa un correo electrónico válido.</div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label fw-bold small">TELÉFONO</label>
                         <input type="tel" id="telefono" class="form-control" placeholder="3794..." required>
+                        <div class="invalid-feedback">Solo se permiten números (mínimo 7 dígitos).</div>
                     </div>
 
                     <div class="mb-4">
@@ -96,45 +98,73 @@
 
     <script>
         const form = document.getElementById('contactForm');
-        const email = document.getElementById('email');
+        const inputNombre = document.getElementById('nombre');
+        const inputEmail = document.getElementById('email');
+        const inputTelefono = document.getElementById('telefono');
         const alertBox = document.getElementById('statusAlert');
 
-        // VALIDACIÓN 1: Regex para correo real
-        function isEmail(val) {
-            return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(val);
-        }
+        // 1. VALIDACIÓN TIEMPO REAL: NOMBRE (Bloquea números y símbolos)
+        inputNombre.addEventListener('input', function() {
+            this.value = this.value.replace(/[^a-zA-ZÁÉÍÓÚáéíóúÑñ\s]/g, '');
+            if (this.value.length >= 3) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        });
 
+        // 2. VALIDACIÓN TIEMPO REAL: TELÉFONO (Bloquea letras)
+        inputTelefono.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            if (this.value.length >= 7) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        });
+
+        // 3. VALIDACIÓN TIEMPO REAL: EMAIL
+        inputEmail.addEventListener('input', function() {
+            const regexEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (regexEmail.test(this.value)) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        });
+
+        // PROCESO DE ENVÍO
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // VALIDACIÓN 2: Comprobar campos vacíos
-            let todoOk = true;
-            form.querySelectorAll('[required]').forEach(input => {
-                if(!input.value) {
-                    input.classList.add('is-invalid');
-                    todoOk = false;
-                } else {
-                    input.classList.remove('is-invalid');
-                }
-            });
+            // Verificamos si todos tienen la clase 'is-valid'
+            const nombreOk = inputNombre.classList.contains('is-valid');
+            const emailOk = inputEmail.classList.contains('is-valid');
+            const telefoOk = inputTelefono.classList.contains('is-valid');
+            const mensajeOk = document.getElementById('mensaje').value.trim() !== "";
 
-            // VALIDACIÓN 3: Específica de Email
-            if(!isEmail(email.value)) {
-                email.classList.add('is-invalid');
-                todoOk = false;
-            }
-
-            if(todoOk) {
-                // ÉXITO TOTAL
-                email.classList.add('is-valid');
+            if (nombreOk && emailOk && telefoOk && mensajeOk) {
                 alertBox.style.display = 'block';
                 alertBox.className = 'alert alert-success';
-                alertBox.innerHTML = '<i class="bi bi-check-circle-fill"></i> ¡MENSAJE ENVIADO CON ÉXITO! Nos contactaremos pronto.';
+                alertBox.innerHTML = '<i class="bi bi-check-circle-fill"></i> ¡DATOS CORRECTOS! Formulario enviado.';
+                form.reset();
+                // Limpiar clases de validación
+                [inputNombre, inputEmail, inputTelefono].forEach(i => i.classList.remove('is-valid'));
+            } else {
+                alertBox.style.display = 'block';
+                alertBox.className = 'alert alert-danger';
+                alertBox.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Por favor, completa los campos correctamente.';
                 
-                form.reset(); // Limpia los campos
-                
-                // Redirección opcional a WhatsApp después de 2 seg
-                /* setTimeout(() => { window.open("https://wa.me/543794576548", "_blank"); }, 2000); */
+                // Forzar validación visual si intentan enviar vacío
+                if(!nombreOk) inputNombre.classList.add('is-invalid');
+                if(!emailOk) inputEmail.classList.add('is-invalid');
+                if(!telefoOk) inputTelefono.classList.add('is-invalid');
             }
         });
     </script>
