@@ -60,6 +60,13 @@
         
         /* Clase para marcar la pestaña en la que estamos parados */
         .active-page { color: #ff0000 !important; border-bottom: 2px solid #ff0000; }
+
+        /* Nota final con contraste suficiente para garantizar legibilidad. */
+        .last-update-note {
+            color: #6c757d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -152,10 +159,8 @@
 
                     <hr class="my-5 opacity-25">
 
-                    <p class="text-muted small text-center m-0">
-                        /*Última actualización: Abril 2026. ENERGY - CORRIENTES, ARGENINA*/
-                        /*Calcula automáticamente mes y año según la fecha de modificación del archivo.*/
-                        Última actualización: {{ ucfirst(\Carbon\Carbon::createFromTimestamp(filemtime(resource_path('views/terminos.blade.php')))->locale('es')->translatedFormat('F Y')) }}. ENERGY - Corrientes, Argentina.
+                    <p class="last-update-note text-center m-0">
+                        Última actualización: Abril 2026. ENERGY - CORRIENTES, ARGENTINA
                     </p>
 
                 </div>
