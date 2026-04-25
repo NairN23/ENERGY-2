@@ -153,7 +153,9 @@
                     <hr class="my-5 opacity-25">
 
                     <p class="text-muted small text-center m-0">
-                        Última actualización: Abril 2026. ENERGY - Corrientes, Argentina.
+                        /*Última actualización: Abril 2026. ENERGY - CORRIENTES, ARGENINA*/
+                        /*Calcula automáticamente mes y año según la fecha de modificación del archivo.*/
+                        Última actualización: {{ ucfirst(\Carbon\Carbon::createFromTimestamp(filemtime(resource_path('views/terminos.blade.php')))->locale('es')->translatedFormat('F Y')) }}. ENERGY - Corrientes, Argentina.
                     </p>
 
                 </div>
