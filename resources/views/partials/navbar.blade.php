@@ -143,7 +143,7 @@
             <span class="brand-subtitle">Sports Nutrition</span>
         </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Abrir menú de navegación">
+        <button class="navbar-toggler" type="button" id="mainNavbarToggler" aria-controls="mainNavbar" aria-expanded="false" aria-label="Abrir menú de navegación">
             <span class="navbar-toggler-icon"></span>
         </button>
 
@@ -193,6 +193,36 @@
 
     // Inicializar al cargar la página
     document.addEventListener('DOMContentLoaded', syncCartBadge);
+
+    // Inicializa el toggle responsive del navbar de forma explícita para evitar fallos por carga parcial.
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggler = document.getElementById('mainNavbarToggler');
+        const collapseElement = document.getElementById('mainNavbar');
+
+        if (!toggler || !collapseElement) return;
+
+        const updateExpanded = () => {
+            toggler.setAttribute('aria-expanded', collapseElement.classList.contains('show') ? 'true' : 'false');
+        };
+
+        if (window.bootstrap && window.bootstrap.Collapse) {
+            const collapse = window.bootstrap.Collapse.getOrCreateInstance(collapseElement, { toggle: false });
+
+            toggler.addEventListener('click', () => {
+                collapse.toggle();
+            });
+
+            collapseElement.addEventListener('shown.bs.collapse', updateExpanded);
+            collapseElement.addEventListener('hidden.bs.collapse', updateExpanded);
+        } else {
+            toggler.addEventListener('click', () => {
+                collapseElement.classList.toggle('show');
+                updateExpanded();
+            });
+        }
+
+        updateExpanded();
+    });
 
     // Sincronizar entre pestañas abiertas
     window.addEventListener('storage', (event) => {
