@@ -11,6 +11,13 @@
     <style>
         /* Fondo general de la página en blanco puro */
         body { background-color: #ffffff; }
+
+        /* Estilo base para todas las tarjetas */
+        .card {
+            /* He oscurecido este gris para que sea visible (antes era #f8f9fa) */
+            background-color: #eaeaea; 
+            transition: all 0.3s ease;
+        }
         
         /* Estilo para los números grandes decorativos que aparecen detrás del texto de cada paso */
         .step-number {
@@ -26,6 +33,7 @@
 
         /* Clase específica para resaltar la tarjeta del paso 02 con un borde rojo característico */
         .card-highlight {
+            background-color: #ffffff !important; /* Mantiene la tarjeta central blanca */
             border: 1px solid #ff0000 !important;
         }
 
@@ -69,6 +77,7 @@
         <div class="row g-4 mb-5">
             
             <div class="col-md-4">
+                <!-- Tarjeta 01: Fondo gris visible (.card) -->
                 <div class="card h-100 border-0 shadow-sm p-4 rounded-4 position-relative">
                     <div class="step-number">01</div>
                     <div class="mt-4 text-center">
@@ -80,6 +89,7 @@
             </div>
 
             <div class="col-md-4">
+                <!-- Tarjeta 02: Resaltada con fondo blanco puro y borde rojo -->
                 <div class="card h-100 card-highlight shadow-sm p-4 rounded-4 position-relative">
                     <div class="step-number text-danger-custom" style="opacity: 0.15;">02</div>
                     <div class="mt-4 text-center">
@@ -91,6 +101,7 @@
             </div>
 
             <div class="col-md-4">
+                <!-- Tarjeta 03: Fondo gris visible (.card) -->
                 <div class="card h-100 border-0 shadow-sm p-4 rounded-4 position-relative">
                     <div class="step-number">03</div>
                     <div class="mt-4 text-center">

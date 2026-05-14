@@ -1,5 +1,9 @@
 @php
-    // Centraliza el orden del menu y calcula que enlace debe mostrarse como activo.
+    /**
+     * CONFIGURACIÓN DEL MENÚ
+     * Definimos los enlaces en un arreglo para no repetir código HTML.
+     * 'active' usa la función request()->is() de Laravel para resaltar la página actual.
+     */
     $navItems = [
         ['label' => 'Principal', 'url' => '/', 'active' => request()->is('/')],
         ['label' => 'Quiénes Somos', 'url' => '/quienes-somos', 'active' => request()->is('quienes-somos')],
@@ -11,12 +15,12 @@
 @endphp
 
 <style>
-    /* Mantiene la base del navbar consistente en todas las vistas que usan este parcial. */
+    /* Estilos generales de la barra de navegación */
     .energy-navbar {
         background-color: #fff;
     }
 
-    /* Apila marca y subtitulo para que el logo se adapte sin romper el header. */
+    /* Estilo del Logo: Apila el nombre y el subtítulo en columna */
     .energy-navbar .navbar-brand {
         display: flex;
         flex-direction: column;
@@ -26,7 +30,7 @@
         white-space: normal;
     }
 
-    /* Diferencia visualmente el subtitulo sin competir con el nombre principal. */
+    /* Estilo del subtítulo debajo del logo */
     .energy-navbar .brand-subtitle {
         color: #6c757d;
         font-size: 0.68rem;
@@ -35,7 +39,7 @@
         text-transform: uppercase;
     }
 
-    /* Limpia el boton hamburguesa para que se integre con el diseño del navbar. */
+    /* Quita bordes y sombras por defecto del botón de menú móvil */
     .energy-navbar .navbar-toggler {
         border: 0;
         box-shadow: none !important;
@@ -46,7 +50,7 @@
         box-shadow: none;
     }
 
-    /* Da estilo comun a los enlaces y prepara el subrayado del estado activo. */
+    /* Diseño de los enlaces del menú */
     .energy-navbar .energy-nav-link {
         border-bottom: 2px solid transparent;
         color: #333 !important;
@@ -56,50 +60,50 @@
         transition: color 0.2s ease, border-color 0.2s ease;
     }
 
-    /* Resalta hover y pagina actual con el color de acento de la marca. */
+    /* Estado 'Hover' (pasar el mouse) y 'Active' (página actual) en rojo */
     .energy-navbar .energy-nav-link:hover,
     .energy-navbar .energy-nav-link.active {
         color: #ff0000 !important;
         border-bottom-color: #ff0000;
     }
 
-    /* Mantiene la lista alineada cuando el navbar esta expandido. */
+    /* Alineación vertical de los elementos de la lista */
     .energy-navbar .energy-nav-list {
         align-items: center;
     }
 
-    /* Reserva un bloque fijo para las acciones de usuario y carrito. */
+    /* Contenedor de iconos de usuario y carrito */
     .energy-navbar .energy-actions {
         flex-shrink: 0;
         min-width: max-content;
     }
 
-    /* Convierte los iconos del header en accesos clicables sin romper la estetica. */
+    /* Estilo para los iconos de acción */
     .energy-navbar .energy-action-link {
         color: #333;
         text-decoration: none;
         transition: color 0.2s ease;
     }
 
+    /* Color rojo para iconos activos o al pasar el mouse */
     .energy-navbar .energy-action-link:hover,
     .energy-navbar .energy-action-link.active {
         color: #ff0000;
     }
 
-    /* Agranda levemente los iconos de usuario y carrito para darles más presencia visual. */
+    /* Tamaño de los iconos de Bootstrap */
     .energy-navbar .energy-action-icon {
         font-size: 1.35rem;
     }
 
+    /* AJUSTES PARA TABLETS Y MÓVILES (Menos de 1200px) */
     @media (max-width: 1199.98px) {
-        /* Separa visualmente el panel desplegable del encabezado en tablet y mobile. */
         .energy-navbar .navbar-collapse {
             margin-top: 1rem;
             padding-top: 1rem;
             border-top: 1px solid rgba(0, 0, 0, 0.08);
         }
 
-        /* Pasa el menu a columna para evitar amontonamiento en pantallas chicas. */
         .energy-navbar .energy-nav-list {
             align-items: stretch;
             gap: 0.25rem !important;
@@ -113,7 +117,7 @@
             padding: 0.65rem 0 !important;
         }
 
-        /* Mueve las acciones debajo del menu cuando el contenido esta colapsado. */
+        /* Acciones (User/Carrito) se van al final del menú desplegable */
         .energy-navbar .energy-actions {
             justify-content: center;
             margin-top: 1rem;
@@ -123,31 +127,36 @@
         }
     }
 
+    /* AJUSTES PARA ESCRITORIO (Más de 1200px) */
     @media (min-width: 1200px) {
-        /* Aumenta la separacion horizontal del menu cuando hay espacio de escritorio. */
         .energy-navbar .energy-nav-list {
             gap: 1.25rem !important;
         }
 
-        /* Reduce la altura visual del link para un header mas compacto en desktop. */
         .energy-navbar .energy-nav-link {
             padding: 0.5rem 0 !important;
         }
     }
 </style>
 
+<!-- ESTRUCTURA DEL NAVBAR -->
 <nav class="navbar navbar-expand-xl navbar-light border-bottom sticky-top py-3 energy-navbar">
     <div class="container">
+        <!-- Logo de la marca -->
         <a class="navbar-brand fw-bold" href="/">
             <span>ENERGY</span>
             <span class="brand-subtitle">Sports Nutrition</span>
         </a>
 
+        <!-- Botón Hamburguesa para móviles -->
         <button class="navbar-toggler" type="button" id="mainNavbarToggler" aria-controls="mainNavbar" aria-expanded="false" aria-label="Abrir menú de navegación">
             <span class="navbar-toggler-icon"></span>
         </button>
 
+        <!-- Contenedor colapsable del menú -->
         <div class="collapse navbar-collapse justify-content-xl-center" id="mainNavbar">
+            
+            <!-- Generación dinámica de links mediante el arreglo definido arriba -->
             <ul class="navbar-nav energy-nav-list mx-xl-auto">
                 @foreach ($navItems as $item)
                     <li class="nav-item">
@@ -158,12 +167,17 @@
                 @endforeach
             </ul>
 
+            <!-- Iconos de Login y Carrito -->
             <div class="d-flex align-items-center gap-3 energy-actions">
+                <!-- Enlace de Usuario/Login -->
                 <a href="/login" class="energy-action-link {{ request()->is('login') ? 'active' : '' }}" aria-label="Ir al login de usuario">
                     <i class="bi bi-person energy-action-icon" aria-hidden="true"></i>
                 </a>
+                
+                <!-- Enlace de Carrito con indicador de cantidad (Badge) -->
                 <a href="/carrito" class="energy-action-link position-relative" aria-label="Ver carrito de compras">
                     <i class="bi bi-cart3 energy-action-icon" aria-hidden="true"></i>
+                    <!-- El badge se oculta/muestra mediante JS según si hay productos -->
                     <span id="cart-count-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55rem; display: none;">
                         0
                     </span>
@@ -175,8 +189,8 @@
 
 <script>
     /**
-     * Función global para actualizar el contador del carrito en el Navbar.
-     * Lee la clave 'energy_cart' de localStorage.
+     * ACTUALIZACIÓN DEL CARRITO
+     * Busca los productos guardados en el navegador (localStorage) y actualiza el número rojo.
      */
     function syncCartBadge() {
         const badge = document.getElementById('cart-count-badge');
@@ -186,15 +200,18 @@
             
             badge.innerText = totalItems;
             
-            // Solo mostramos el badge si hay al menos 1 producto
+            // Si el carrito está vacío, ocultamos el círculo rojo
             badge.style.display = totalItems > 0 ? 'block' : 'none';
         }
     }
 
-    // Inicializar al cargar la página
+    // Ejecuta la actualización al cargar la página
     document.addEventListener('DOMContentLoaded', syncCartBadge);
 
-    // Inicializa el toggle responsive del navbar de forma explícita para evitar fallos por carga parcial.
+    /**
+     * LÓGICA DEL BOTÓN MÓVIL (MENU HAMBURGUESA)
+     * Asegura que el menú abra y cierre correctamente y actualice los estados de accesibilidad.
+     */
     document.addEventListener('DOMContentLoaded', () => {
         const toggler = document.getElementById('mainNavbarToggler');
         const collapseElement = document.getElementById('mainNavbar');
@@ -205,6 +222,7 @@
             toggler.setAttribute('aria-expanded', collapseElement.classList.contains('show') ? 'true' : 'false');
         };
 
+        // Verifica si Bootstrap 5 está disponible para usar su motor de animaciones
         if (window.bootstrap && window.bootstrap.Collapse) {
             const collapse = window.bootstrap.Collapse.getOrCreateInstance(collapseElement, { toggle: false });
 
@@ -215,6 +233,7 @@
             collapseElement.addEventListener('shown.bs.collapse', updateExpanded);
             collapseElement.addEventListener('hidden.bs.collapse', updateExpanded);
         } else {
+            // Si no hay Bootstrap JS, funciona mediante cambio de clases básico
             toggler.addEventListener('click', () => {
                 collapseElement.classList.toggle('show');
                 updateExpanded();
@@ -224,7 +243,10 @@
         updateExpanded();
     });
 
-    // Sincronizar entre pestañas abiertas
+    /**
+     * SINCRONIZACIÓN ENTRE PESTAÑAS
+     * Si el usuario agrega algo al carrito en otra pestaña, esta función actualiza el número en la actual.
+     */
     window.addEventListener('storage', (event) => {
         if (event.key === 'energy_cart') {
             syncCartBadge();

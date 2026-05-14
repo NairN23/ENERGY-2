@@ -50,3 +50,8 @@ Route::get('/login', function () {
 Route::get('/carrito', function () {
     return view('carrito');
 });
+
+
+use App\Http\Controllers\ProductoController;
+
+Route::resource('productos', ProductoController::class);
