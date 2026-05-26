@@ -29,4 +29,13 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * RELACIÓN AGREGADA: Un usuario puede tener muchos registros en la tabla de carritos.
+     * Esto conecta al usuario actual con sus productos guardados en MariaDB.
+     */
+    public function carritos()
+    {
+        return $this->hasMany(\App\Models\Carrito::class, 'user_id');
+    }
 }

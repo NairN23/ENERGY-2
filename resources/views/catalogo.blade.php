@@ -92,11 +92,13 @@
             align-items: center;
             justify-content: center;
             transition: 0.2s;
+            text-decoration: none;
         }
 
         .btn-add:hover {
             background-color: #ff0000;
             transform: scale(1.1);
+            color: white;
         }
     </style>
 </head>
@@ -118,9 +120,17 @@
                         <p class="product-description">Proteína de suero de máxima pureza para recuperación muscular.</p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="price-text">$38500</span>
-                            <button class="btn-add add-to-cart" data-name="Premium Whey Star" data-price="38500">
-                                <i class="bi bi-plus-lg fs-5"></i>
-                            </button>
+                            
+                            @auth
+                                <button class="btn-add add-to-cart" data-name="Premium Whey Star" data-price="38500">
+                                    <i class="bi bi-plus-lg fs-5"></i>
+                                </button>
+                            @endauth
+                            @guest
+                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
+                                    <i class="bi bi-lock-fill fs-5"></i>
+                                </a>
+                            @endguest
                         </div>
                     </div>
                 </div>
@@ -137,9 +147,17 @@
                         <p class="product-description">Aumenta tu potencia muscular y fuerza explosiva diaria.</p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="price-text">$24000</span>
-                            <button class="btn-add add-to-cart" data-name="Creatina HTN" data-price="24000">
-                                <i class="bi bi-plus-lg fs-5"></i>
-                            </button>
+                            
+                            @auth
+                                <button class="btn-add add-to-cart" data-name="Creatina HTN" data-price="24000">
+                                    <i class="bi bi-plus-lg fs-5"></i>
+                                </button>
+                            @endauth
+                            @guest
+                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
+                                    <i class="bi bi-lock-fill fs-5"></i>
+                                </a>
+                            @endguest
                         </div>
                     </div>
                 </div>
@@ -156,9 +174,17 @@
                         <p class="product-description">Fórmula diseñada para máxima energía y vascularización.</p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="price-text">$19500</span>
-                            <button class="btn-add add-to-cart" data-name="Pump V8 Star" data-price="19500">
-                                <i class="bi bi-plus-lg fs-5"></i>
-                            </button>
+                            
+                            @auth
+                                <button class="btn-add add-to-cart" data-name="Pump V8 Star" data-price="19500">
+                                    <i class="bi bi-plus-lg fs-5"></i>
+                                </button>
+                            @endauth
+                            @guest
+                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
+                                    <i class="bi bi-lock-fill fs-5"></i>
+                                </a>
+                            @endguest
                         </div>
                     </div>
                 </div>
@@ -175,9 +201,17 @@
                         <p class="product-description">Favorece la movilización de grasas para obtener energía.</p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="price-text">$16800</span>
-                            <button class="btn-add add-to-cart" data-name="L-Carnitina Gentech" data-price="16800">
-                                <i class="bi bi-plus-lg fs-5"></i>
-                            </button>
+                            
+                            @auth
+                                <button class="btn-add add-to-cart" data-name="L-Carnitina Gentech" data-price="16800">
+                                    <i class="bi bi-plus-lg fs-5"></i>
+                                </button>
+                            @endauth
+                            @guest
+                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
+                                    <i class="bi bi-lock-fill fs-5"></i>
+                                </a>
+                            @endguest
                         </div>
                     </div>
                 </div>
@@ -194,9 +228,17 @@
                         <p class="product-description">Mantiene y recupera las fibras musculares fatigadas.</p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="price-text">$17800</span>
-                            <button class="btn-add add-to-cart" data-name="BCAA Star" data-price="17800">
-                                <i class="bi bi-plus-lg fs-5"></i>
-                            </button>
+                            
+                            @auth
+                                <button class="btn-add add-to-cart" data-name="BCAA Star" data-price="17800">
+                                    <i class="bi bi-plus-lg fs-5"></i>
+                                </button>
+                            @endauth
+                            @guest
+                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
+                                    <i class="bi bi-lock-fill fs-5"></i>
+                                </a>
+                            @endguest
                         </div>
                     </div>
                 </div>
@@ -213,9 +255,17 @@
                         <p class="product-description">Proteína aislada de máxima absorción, baja en sodio.</p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="price-text">$42000</span>
-                            <button class="btn-add add-to-cart" data-name="Iso Whey ENA" data-price="42000">
-                                <i class="bi bi-plus-lg fs-5"></i>
-                            </button>
+                            
+                            @auth
+                                <button class="btn-add add-to-cart" data-name="Iso Whey ENA" data-price="42000">
+                                    <i class="bi bi-plus-lg fs-5"></i>
+                                </button>
+                            @endauth
+                            @guest
+                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
+                                    <i class="bi bi-lock-fill fs-5"></i>
+                                </a>
+                            @endguest
                         </div>
                     </div>
                 </div>
@@ -232,9 +282,17 @@
                         <p class="product-description">Ideal para evitar el catabolismo y mejorar defensas.</p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="price-text">$21500</span>
-                            <button class="btn-add add-to-cart" data-name="Glutamina ENA" data-price="21500">
-                                <i class="bi bi-plus-lg fs-5"></i>
-                            </button>
+                            
+                            @auth
+                                <button class="btn-add add-to-cart" data-name="Glutamina ENA" data-price="21500">
+                                    <i class="bi bi-plus-lg fs-5"></i>
+                                </button>
+                            @endauth
+                            @guest
+                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
+                                    <i class="bi bi-lock-fill fs-5"></i>
+                                </a>
+                            @endguest
                         </div>
                     </div>
                 </div>
@@ -251,9 +309,17 @@
                         <p class="product-description">Aporta todos los micronutrientes para el día a día.</p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="price-text">$14500</span>
-                            <button class="btn-add add-to-cart" data-name="Multivitamin" data-price="14500">
-                                <i class="bi bi-plus-lg fs-5"></i>
-                            </button>
+                            
+                            @auth
+                                <button class="btn-add add-to-cart" data-name="Multivitamin" data-price="14500">
+                                    <i class="bi bi-plus-lg fs-5"></i>
+                                </button>
+                            @endauth
+                            @guest
+                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
+                                    <i class="bi bi-lock-fill fs-5"></i>
+                                </a>
+                            @endguest
                         </div>
                     </div>
                 </div>
@@ -265,6 +331,12 @@
     @include('partials.footer')
 
     <script>
+        {{-- AGREGADO: Limpieza forzada del localStorage inmediatamente si es un visitante --}}
+        @guest
+            localStorage.removeItem('energy_cart');
+            if (typeof syncCartBadge === 'function') syncCartBadge();
+        @endguest
+
         /**
          * Lógica del carrito:
          * Guarda en el LocalStorage el nombre y precio del producto al hacer clic.

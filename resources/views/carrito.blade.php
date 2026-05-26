@@ -9,20 +9,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
     <style>
-        /* Estilos personalizados para la estética de Energy */
         body { background-color: #fcfaf8; font-family: sans-serif; }
-        
-        /* Contenedor principal de los productos en el carrito */
         .cart-container { background: white; border-radius: 20px; padding: 30px; border: 1px solid #eee; }
-        
-        /* Estilo para el botón de eliminar producto */
         .btn-remove { color: #ff0000; cursor: pointer; font-size: 0.7rem; transition: 0.3s; }
         .btn-remove:hover { text-decoration: underline; }
-        
-        /* Caja lateral del resumen de costos */
         .summary-box { background: #fff; border-radius: 20px; padding: 25px; border: 1px solid #eee; }
-        
-        /* Separación entre cada producto de la lista */
         .product-item { border-bottom: 1px solid #f1f1f1; padding: 15px 0; }
         .product-item:last-child { border-bottom: none; }
     </style>
@@ -38,6 +29,15 @@
             <div class="col-lg-8">
                 <div class="cart-container shadow-sm">
                     <div id="cart-items-list"></div>
+                    
+                    <div id="cart-actions-container" class="mt-4 pt-3 border-top" style="display: none;">
+                        <form action="{{ route('carrito.vaciar') }}" method="POST" id="formVaciarCarrito">
+                            @csrf
+                            <button type="submit" class="btn btn-sm btn-outline-danger px-3 py-2 fw-bold" style="border-radius: 10px; font-size: 0.78rem; letter-spacing: 0.03em;">
+                                <i class="bi bi-trash3-fill me-1"></i> VACIAR CARRITO COMPLETAMENTE
+                            </button>
+                        </form>
+                    </div>
                     
                     <div id="empty-cart-msg" style="display: none;" class="text-center py-5">
                         <i class="bi bi-cart-x display-1 text-muted"></i>
@@ -79,40 +79,53 @@
         </div>
     </div>
 
-
     <script>
+        /**
+         * SINCRONIZACIÓN CON BASE DE DATOS MARIADB
+         * Al cargar la página, si Laravel envió productos guardados de la sesión,
+         * los inyectamos en el localStorage para que persistan correctamente.
+         */
+        function inicializarCarritoDesdeBD() {
+            @if(isset($carritoBD))
+                const carritoDesdeBD = {!! $carritoBD !!};
+                
+                if (carritoDesdeBD && carritoDesdeBD.length > 0) {
+                    // Si hay elementos en la BD, actualizamos el localStorage con lo que recuperó el servidor
+                    localStorage.setItem('energy_cart', JSON.stringify(carritoDesdeBD));
+                }
+            @endif
+        }
+
         /**
          * Lee los productos guardados en el navegador (localStorage)
          * y genera el HTML para mostrarlos en pantalla.
          */
         function renderCart() {
-            // Obtenemos los datos del localStorage o un array vacío si no hay nada
             const cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
             const listContainer = document.getElementById('cart-items-list');
             const emptyMsg = document.getElementById('empty-cart-msg');
+            const actionsContainer = document.getElementById('cart-actions-container');
             const subtotalEl = document.getElementById('subtotal');
             const totalEl = document.getElementById('total');
 
-            // Si no hay productos, mostrar mensaje de carrito vacío
             if (cart.length === 0) {
                 listContainer.innerHTML = '';
                 emptyMsg.style.display = 'block';
+                actionsContainer.style.display = 'none';
                 subtotalEl.innerText = '$0';
                 totalEl.innerText = '$0';
                 return;
             }
 
-            // Ocultar mensaje de vacío si hay productos
             emptyMsg.style.display = 'none';
+            actionsContainer.style.display = 'block';
             let html = '';
             let total = 0;
 
-            // Recorrer los productos y sumar el total
             cart.forEach((item, index) => {
                 const price = parseFloat(item.price);
                 total += price;
 
-                // Generar el bloque HTML de cada producto
                 html += `
                 <div class="product-item d-flex align-items-center justify-content-between">
                     <div>
@@ -127,7 +140,6 @@
                 `;
             });
 
-            // Inyectar el HTML generado y actualizar precios
             listContainer.innerHTML = html;
             subtotalEl.innerText = `$${total.toLocaleString()}`;
             totalEl.innerText = `$${total.toLocaleString()}`;
@@ -138,13 +150,20 @@
          */
         function removeItem(index) {
             let cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
-            cart.splice(index, 1); // Quitar el elemento del array
-            localStorage.setItem('energy_cart', JSON.stringify(cart)); // Guardar cambios
-            renderCart(); // Volver a dibujar el carrito
             
-            // Si existe una función para actualizar el numerito rojo del carrito, la llamamos
+            // Opcional: Acá podrías mandar un fetch POST a 'carrito.eliminar' si querés borrarlo de la BD en tiempo real
+            cart.splice(index, 1);
+            localStorage.setItem('energy_cart', JSON.stringify(cart));
+            renderCart();
+            
             if(typeof syncCartBadge === 'function') syncCartBadge();
         }
+
+        // Al vaciar el carrito por completo limpiamos el almacenamiento del navegador
+        document.getElementById('formVaciarCarrito').addEventListener('submit', function(e) {
+            localStorage.removeItem('energy_cart');
+            if(typeof syncCartBadge === 'function') syncCartBadge();
+        });
 
         /**
          * Crea un mensaje de texto formateado y abre WhatsApp con el pedido
@@ -156,7 +175,6 @@
             let mensaje = "¡Hola ENERGY! ⚡ Quiero realizar el siguiente pedido:%0A%0A";
             let total = 0;
 
-            // Construcción del texto del mensaje
             cart.forEach((item, i) => {
                 mensaje += `- ${item.name} ($${item.price})%0A`;
                 total += parseFloat(item.price);
@@ -164,13 +182,16 @@
 
             mensaje += `%0A*Total: $${total.toLocaleString()}*%0A%0A_¿Me confirmarías stock para coordinar el envío?_`;
 
-            const telefono = "543794576548"; // Número destino
-            // Abrir link oficial de WhatsApp en pestaña nueva
+            const telefono = "543794576548";
             window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
         }
 
-        // Ejecutar la función renderCart apenas cargue la página
-        document.addEventListener('DOMContentLoaded', renderCart);
+        // Ejecutar la sincronización y el renderizado apenas cargue el DOM
+        document.addEventListener('DOMContentLoaded', () => {
+            inicializarCarritoDesdeBD();
+            renderCart();
+            if(typeof syncCartBadge === 'function') syncCartBadge();
+        });
     </script>
 
     @include('partials.footer')

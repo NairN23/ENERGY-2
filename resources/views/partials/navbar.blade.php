@@ -139,24 +139,19 @@
     }
 </style>
 
-<!-- ESTRUCTURA DEL NAVBAR -->
 <nav class="navbar navbar-expand-xl navbar-light border-bottom sticky-top py-3 energy-navbar">
     <div class="container">
-        <!-- Logo de la marca -->
         <a class="navbar-brand fw-bold" href="/">
             <span>ENERGY</span>
             <span class="brand-subtitle">Sports Nutrition</span>
         </a>
 
-        <!-- Botón Hamburguesa para móviles -->
         <button class="navbar-toggler" type="button" id="mainNavbarToggler" aria-controls="mainNavbar" aria-expanded="false" aria-label="Abrir menú de navegación">
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <!-- Contenedor colapsable del menú -->
         <div class="collapse navbar-collapse justify-content-xl-center" id="mainNavbar">
             
-            <!-- Generación dinámica de links mediante el arreglo definido arriba -->
             <ul class="navbar-nav energy-nav-list mx-xl-auto">
                 @foreach ($navItems as $item)
                     <li class="nav-item">
@@ -167,21 +162,54 @@
                 @endforeach
             </ul>
 
-            <!-- Iconos de Login y Carrito -->
-            <div class="d-flex align-items-center gap-3 energy-actions">
-                <!-- Enlace de Usuario/Login -->
-                <a href="/login" class="energy-action-link {{ request()->is('login') ? 'active' : '' }}" aria-label="Ir al login de usuario">
-                    <i class="bi bi-person energy-action-icon" aria-hidden="true"></i>
-                </a>
+           <div class="d-flex align-items-center gap-3 energy-actions">
                 
-                <!-- Enlace de Carrito con indicador de cantidad (Badge) -->
-                <a href="/carrito" class="energy-action-link position-relative" aria-label="Ver carrito de compras">
-                    <i class="bi bi-cart3 energy-action-icon" aria-hidden="true"></i>
-                    <!-- El badge se oculta/muestra mediante JS según si hay productos -->
-                    <span id="cart-count-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55rem; display: none;">
-                        0
-                    </span>
-                </a>
+                {{-- Lógica de perfil/login según el estado de autenticación --}}
+                @auth
+                    <div class="dropdown">
+                        <a href="#" class="energy-action-link dropdown-toggle no-arrow" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Opciones de usuario">
+                            <i class="bi bi-person-check-fill energy-action-icon" aria-hidden="true"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="userMenu" style="border-radius: 12px; font-size: 0.85rem;">
+                            <li>
+                                <span class="dropdown-item-text text-muted">Hola, <strong>{{ auth()->user()->name }}</strong></span>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/">
+                                    <i class="bi bi-house me-2"></i> Inicio
+                                </a>
+                            </li>
+                            <li>
+                                {{-- MODIFICADO: Llama a la función JS que inyecta los datos locales antes del Logout --}}
+                                <a class="dropdown-item text-danger fw-bold" href="#" onclick="event.preventDefault(); prepararLogoutYGuardar();">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Cerrar Sesión
+                                </a>
+                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                    @csrf
+                                    <input type="hidden" name="carrito_data" id="carrito_data_input">
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                @endauth
+
+                @guest
+                    <a href="/login" class="energy-action-link {{ request()->is('login') ? 'active' : '' }}" aria-label="Ir al login de usuario">
+                        <i class="bi bi-person energy-action-icon" aria-hidden="true"></i>
+                    </a>
+                @endguest
+                
+                {{-- Control del acceso al carrito mediante directivas Blade --}}
+                @auth
+                    <a href="/carrito" class="energy-action-link position-relative {{ request()->is('carrito') ? 'active' : '' }}" aria-label="Ver carrito de compras">
+                        <i class="bi bi-cart3 energy-action-icon" aria-hidden="true"></i>
+                        <span id="cart-count-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55rem; display: none;">
+                            0
+                        </span>
+                    </a>
+                @endauth
+
             </div>
         </div>
     </div>
@@ -189,11 +217,27 @@
 
 <script>
     /**
+     * LOGOUT SINCRONIZADO CON MARIADB
+     * Copia los productos actuales del localStorage al formulario oculto antes del envío.
+     */
+    function prepararLogoutYGuardar() {
+        const cartData = localStorage.getItem('energy_cart') || '[]';
+        document.getElementById('carrito_data_input').value = cartData;
+        document.getElementById('logout-form').submit();
+    }
+
+    /**
      * ACTUALIZACIÓN DEL CARRITO
      * Busca los productos guardados en el navegador (localStorage) y actualiza el número rojo.
      */
     function syncCartBadge() {
         const badge = document.getElementById('cart-count-badge');
+        
+        {{-- Limpieza preventiva e inmediata del almacenamiento local si ingresa un visitante --}}
+        @guest
+            localStorage.removeItem('energy_cart');
+        @endguest
+
         if (badge) {
             const cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
             const totalItems = cart.length;

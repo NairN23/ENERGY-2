@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Producto extends Model
 {
-    use HasFactory;
+    // Forzamos el nombre de la tabla en MariaDB
+    protected $table = 'productos';
 
     protected $fillable = [
         'categoria_id',
@@ -22,21 +22,19 @@ class Producto extends Model
         'activo',
     ];
 
-    protected function casts(): array
-    {
-        return [
-            'precio' => 'decimal:2',
-            'activo' => 'boolean',
-        ];
-    }
-
+    /**
+     * RELACIÓN: El producto pertenece a una categoría.
+     */
     public function categoria(): BelongsTo
     {
-        return $this->belongsTo(Categoria::class);
+        return $this->belongsTo(Categoria::class, 'categoria_id');
     }
 
-    public function detalles(): HasMany
+    /**
+     * RELACIÓN: El producto puede aparecer en muchos registros de carrito.
+     */
+    public function carritos(): HasMany
     {
-        return $this->hasMany(PedidoDetalle::class);
+        return $this->hasMany(Carrito::class, 'producto_id');
     }
 }

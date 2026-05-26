@@ -9,33 +9,39 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
     <style>
+        /* Estilos generales para el fondo y la tipografía de la web */
         body {
             font-family: sans-serif;
             color: #161616;
+            /* Degradado de fondo con un destello rojo sutil arriba a la izquierda y fondo claro blanco/gris */
             background:
                 radial-gradient(circle at top left, rgba(255, 0, 0, 0.08), transparent 24%),
                 linear-gradient(180deg, #f5f5f5 0%, #ffffff 100%);
         }
 
+        /* Contenedor principal de la página: centra la tarjeta verticalmente en la pantalla */
         .login-page {
-            min-height: calc(100vh - 88px);
+            min-height: calc(100vh - 88px); /* Descuenta la altura estimada de la barra de navegación */
             display: flex;
             align-items: center;
             padding: 3rem 0 4rem;
         }
 
+        /* Estructura de la tarjeta blanca centralizada */
         .login-card {
             border: 0;
-            border-radius: 2rem;
-            overflow: hidden;
+            border-radius: 2rem; /* Bordes muy redondeados */
+            overflow: hidden;    /* Evita que los fondos de las columnas tapen las esquinas redondeadas */
             background-color: #fff;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.12); /* Sombra difuminada para dar profundidad */
         }
 
+        /* Columna izquierda: Panel decorativo oscuro con la foto de gimnasio */
         .login-visual {
             min-height: 100%;
             padding: 3rem;
             color: #fff;
+            /* Capa negra semitransparente sobre la foto para garantizar el contraste de las letras */
             background:
                 linear-gradient(145deg, rgba(10, 10, 10, 0.92), rgba(38, 38, 38, 0.82)),
                 url('https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80') center/cover;
@@ -44,10 +50,11 @@
             justify-content: center;
         }
 
-        /* --- AGREGADO: Estilos para que el borde cambie a rojo o verde según la validación --- */
+        /* Estilos específicos para que el borde cambie a rojo o verde según la validación del correo */
         .login-input.is-invalid { border-color: #dc3545 !important; background-color: #fff8f8; }
         .login-input.is-valid { border-color: #198754 !important; background-color: #f8fff8; }
 
+        /* Estilos del chip de texto superior (si decidís usarlo en el futuro) */
         .login-chip {
             display: inline-flex;
             align-self: flex-start;
@@ -60,18 +67,21 @@
             text-transform: uppercase;
         }
 
+        /* Título principal del panel visual izquierdo (ENTRÁ Y SEGUÍ TU PROGRESO) */
         .login-visual-title {
             margin-top: 1.25rem;
-            font-size: clamp(2.15rem, 4vw, 3.45rem);
+            font-size: clamp(2.15rem, 4vw, 3.45rem); /* Tamaño adaptativo según la pantalla */
             font-weight: 800;
             line-height: 0.98;
             text-transform: uppercase;
         }
 
+        /* Resaltado rojo de la marca para la palabra "PROGRESO" */
         .login-visual-title span {
             color: #ff0000;
         }
 
+        /* Párrafo descriptivo debajo del título principal */
         .login-visual-copy {
             margin-top: 1.25rem;
             max-width: 31rem;
@@ -80,12 +90,14 @@
             line-height: 1.7;
         }
 
+        /* Grilla para las cajas de los puntos clave del panel izquierdo */
         .login-visual-points {
             display: grid;
             gap: 0.85rem;
             margin-top: 2rem;
         }
 
+        /* Cajas individuales con fondo oscuro semitransparente para los puntos clave */
         .login-visual-point {
             padding: 0.95rem 1rem;
             border-radius: 1rem;
@@ -94,10 +106,12 @@
             line-height: 1.55;
         }
 
+        /* Espaciado interno del panel del formulario (Columna derecha) */
         .login-form-panel {
             padding: 3rem;
         }
 
+        /* Título de introducción (si decidís usar un texto pequeño arriba del título) */
         .login-eyebrow {
             color: #ff0000;
             font-size: 0.82rem;
@@ -106,6 +120,7 @@
             text-transform: uppercase;
         }
 
+        /* Título principal del formulario (BIENVENIDO A ENERGY) */
         .login-form-title {
             margin-top: 0.35rem;
             margin-bottom: 0.4rem;
@@ -114,12 +129,14 @@
             text-transform: uppercase;
         }
 
+        /* Subtítulo indicativo abajo de BIENVENIDO A ENERGY */
         .login-form-copy {
             margin-bottom: 1.75rem;
             color: #5d5d5d;
             line-height: 1.7;
         }
 
+        /* Etiquetas de texto arriba de cada input (EMAIL / CONTRASEÑA) */
         .login-label {
             margin-bottom: 0.45rem;
             font-size: 0.88rem;
@@ -128,6 +145,7 @@
             text-transform: uppercase;
         }
 
+        /* Estilos base para los cuadros de entrada de texto */
         .login-input {
             min-height: 3.3rem;
             border: 1px solid #d8d8d8;
@@ -136,12 +154,14 @@
             background-color: #f7f7f7;
         }
 
+        /* Comportamiento visual de los inputs cuando el usuario hace foco o clic adentro */
         .login-input:focus {
             background-color: #fff;
-            border-color: #ff0000;
-            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.12);
+            border-color: #ff0000; /* Borde rojo identificatorio */
+            box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.12); /* Brillo difuminado rojo */
         }
 
+        /* Textos secundarios y enlaces pequeños (Ej: ¿La olvidaste?) */
         .login-link,
         .login-secondary {
             color: #6a6a6a;
@@ -149,10 +169,12 @@
             text-decoration: none;
         }
 
+        /* El enlace cambia a color rojo de ENERGY al pasar el mouse por encima */
         .login-link:hover {
             color: #ff0000;
         }
 
+        /* Botón negro principal de envío (Iniciar sesión) */
         .login-submit {
             width: 100%;
             min-height: 3.4rem;
@@ -163,14 +185,16 @@
             font-weight: 800;
             letter-spacing: 0.06em;
             text-transform: uppercase;
-            transition: transform 0.2s ease, background-color 0.2s ease;
+            transition: transform 0.2s ease, background-color 0.2s ease; /* Transición suave de efectos */
         }
 
+        /* El botón se vuelve rojo y hace un mini salto al pasar el mouse encima */
         .login-submit:hover {
             background-color: #ff0000;
             transform: translateY(-1px);
         }
 
+        /* Alerta oculta por defecto para mensajes del sistema */
         .login-inline-alert {
             display: none;
             border-radius: 14px;
@@ -179,6 +203,7 @@
             color: #7a1c1c;
         }
 
+        /* Grilla para las dos cajas de beneficios abajo del botón */
         .login-benefits {
             margin-top: 1.4rem;
             display: grid;
@@ -186,6 +211,7 @@
             gap: 0.9rem;
         }
 
+        /* Estilo para cada bloque individual de beneficio */
         .login-benefit {
             padding: 1rem;
             border-radius: 1rem;
@@ -193,6 +219,7 @@
             background-color: #f8f8f8;
         }
 
+        /* Títulos en negrita dentro de las cajas de beneficios */
         .login-benefit strong {
             display: block;
             margin-bottom: 0.25rem;
@@ -200,12 +227,14 @@
             font-weight: 800;
         }
 
+        /* Texto aclaratorio al final de todo el panel del formulario */
         .login-footnote {
             margin-top: 1.25rem;
             color: #6d6d6d;
             font-size: 0.92rem;
         }
 
+        /* REGLAS RESPONSIVE: Ajustes para pantallas medianas (Tablets) */
         @media (max-width: 991.98px) {
             .login-visual,
             .login-form-panel {
@@ -213,6 +242,7 @@
             }
         }
 
+        /* REGLAS RESPONSIVE: Ajustes estructurales para pantallas chicas (Celulares) */
         @media (max-width: 767.98px) {
             .login-page {
                 padding: 2rem 0 3rem;
@@ -223,6 +253,7 @@
                 padding: 1.75rem;
             }
 
+            /* Los beneficios se acomodan uno debajo del otro en celulares */
             .login-benefits {
                 grid-template-columns: 1fr;
             }
@@ -236,6 +267,7 @@
     <main class="login-page">
         <div class="container">
             <div class="row g-0 login-card">
+                
                 <div class="col-12 col-lg-6">
                     <section class="login-visual h-100">
                         <h1 class="login-visual-title">Entrá y seguí tu <span>progreso</span></h1>
@@ -244,7 +276,7 @@
                         </p>
 
                         <div class="login-visual-points">
-                            <div class="login-visual-point">Comprá más rápido con tus datos ya listos y mantené ordenadas tus preferencias.</div>
+                            <div class="login-visual-point">Comprá más rápido con tus datos ya listos y mantené ordenadas tus preferences.</div>
                             <div class="login-visual-point">Seguí tu actividad dentro de la tienda y preparate para futuras funciones de usuario.</div>
                         </div>
                     </section>
@@ -257,16 +289,29 @@
                             Iniciá sesión con tu email para continuar comprando y revisar tus datos.
                         </p>
 
-                        <form id="loginUnderConstructionForm" action="#" method="POST">
+                        <form id="loginForm" action="{{ route('login.post') }}" method="POST">
+                            @csrf 
+
+                            @if ($errors->has('auth_failed'))
+                                <div class="alert alert-danger mb-4" style="border-radius: 14px; font-size: 0.92rem;">
+                                    {{ $errors->first('auth_failed') }}
+                                </div>
+                            @endif
+
                             <div class="mb-3">
                                 <label for="email" class="login-label">Email</label>
-                                <input id="email" type="email" class="form-control login-input" placeholder="ejemplo@energy.com.ar">
-                                <div class="invalid-feedback">Ingresá un correo válido.</div>
+                                <input id="email" name="email" type="email" class="form-control login-input @error('email') is-invalid @enderror" placeholder="ejemplo@energy.com.ar" value="{{ old('email') }}" required>
+                                @error('email')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="mb-3">
                                 <label for="password" class="login-label">Contraseña</label>
-                                <input id="password" type="password" class="form-control login-input" placeholder="Ingresá tu contraseña">
+                                <input id="password" name="password" type="password" class="form-control login-input @error('password') is-invalid @enderror" placeholder="Ingresá tu contraseña" required>
+                                @error('password')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
 
                             <div class="d-flex justify-content-end mb-3">
@@ -275,14 +320,10 @@
 
                             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">
                                 <div class="form-check m-0">
-                                    <input class="form-check-input" type="checkbox" value="1" id="rememberUser">
+                                    <input class="form-check-input" type="checkbox" name="remember" value="1" id="rememberUser">
                                     <label class="form-check-label login-secondary" for="rememberUser">Recordarme en este dispositivo</label>
                                 </div>
                                 <span class="login-secondary">Acceso seguro para clientes ENERGY</span>
-                            </div>
-
-                            <div id="loginConstructionAlert" class="alert login-inline-alert mb-4" role="alert">
-                                La sección de inicio de sesión todavía está en construcción.
                             </div>
 
                             <button type="submit" class="login-submit">Iniciar sesión</button>
@@ -300,7 +341,7 @@
                         </div>
 
                         <div class="login-footnote">
-                            ¿Todavía no tenés cuenta? <a href="/contacto" class="login-link">Contactanos para registrarte</a>
+                            ¿Todavía no tenés cuenta? <a href="{{ route('register') }}" class="login-link">Registrate acá</a>
                         </div>
                     </section>
                 </div>
@@ -312,34 +353,30 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // --- AGREGADO: Lógica de validación de correo ---
+        // Captura el elemento de entrada del correo electrónico
         const emailInput = document.getElementById('email');
 
-        // Función que verifica si el correo tiene el formato correcto
+        // Función con expresión regular que analiza que el correo tenga un formato real (@ y .com)
         function esEmailValido(valor) {
             const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
             return regex.test(valor);
         }
 
-        // Se activa cada vez que el usuario escribe algo (input)
+        // Evento que se ejecuta cada vez que el usuario escribe una letra adentro de la casilla de email
         emailInput.addEventListener('input', function() {
             if (esEmailValido(this.value)) {
                 this.classList.remove('is-invalid');
-                this.classList.add('is-valid'); // Borde verde
+                this.classList.add('is-valid'); // Pinta borde verde si cumple el formato
             } else {
                 this.classList.remove('is-valid');
-                this.classList.add('is-invalid'); // Borde rojo
+                this.classList.add('is-invalid'); // Pinta borde rojo si está incompleto
             }
         });
 
-        // Tu lógica original para el botón de "Iniciar sesión"
-        document.getElementById('loginUnderConstructionForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            
-            // Solo mostramos la alerta si el correo ya es válido
-            if (esEmailValido(emailInput.value)) {
-                document.getElementById('loginConstructionAlert').style.display = 'block';
-            } else {
+        // Evento que analiza el click de envío final sobre el formulario
+        document.getElementById('loginForm').addEventListener('submit', function (event) {
+            if (!esEmailValido(emailInput.value)) {
+                event.preventDefault(); // Cancela temporalmente el envío SÓLO si el texto del email es inválido
                 emailInput.classList.add('is-invalid');
             }
         });
