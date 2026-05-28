@@ -70,8 +70,8 @@
 
     <div class="container py-5">
         <div class="text-center mb-5">
-            <h1 class="display-3 fw-bold text-uppercase">CÓMO <span class="text-danger-custom">COMPRAR</span></h1>
-            <p class="text-muted fs-5 mt-3">Tu suplementación favorita en la puerta de tu casa. Rápido, seguro y garantizado.</p>
+            <h1 class="display-3 fw-bold text-uppercase">CÓMO <span class="text-danger-custom">{!! \App\Models\PaginaContenido::getValor('comercializacion_titulo', 'COMPRAR') !!}</span></h1>
+            <p class="text-muted fs-5 mt-3">{!! \App\Models\PaginaContenido::getValor('comercializacion_subtitulo', 'Tu suplementación favorita en la puerta de tu casa. Rápido, seguro y garantizado.') !!}</p>
         </div>
 
         <div class="row g-4 mb-5">
@@ -81,8 +81,8 @@
                 <div class="card h-100 border-0 shadow-sm p-4 rounded-4 position-relative">
                     <div class="step-number">01</div>
                     <div class="mt-4 text-center">
-                        <h5 class="fw-bold text-uppercase">Elegí tus productos</h5>
-                        <p class="text-muted small">Navegá por nuestro catálogo y seleccioná los suplementos que mejor se adapten a tu objetivo físico.</p>
+                        <h5 class="fw-bold text-uppercase">{!! \App\Models\PaginaContenido::getValor('comercializacion_paso1_titulo', 'Elegí tus productos') !!}</h5>
+                        <p class="text-muted small">{!! \App\Models\PaginaContenido::getValor('comercializacion_paso1_desc', 'Navegá por nuestro catálogo y seleccioná los suplementos que mejor se adapten a tu objetivo físico.') !!}</p>
                         <img src="/images/Comercializacion/icono-elegir.png" class="step-icon" alt="Elegí tus productos">
                     </div>
                 </div>
@@ -93,8 +93,8 @@
                 <div class="card h-100 card-highlight shadow-sm p-4 rounded-4 position-relative">
                     <div class="step-number text-danger-custom" style="opacity: 0.15;">02</div>
                     <div class="mt-4 text-center">
-                        <h5 class="fw-bold text-uppercase">Coordiná el pago</h5>
-                        <p class="text-muted small">Aceptamos transferencias, tarjetas de crédito/débito y pagos en efectivo al momento de la entrega.</p>
+                        <h5 class="fw-bold text-uppercase">{!! \App\Models\PaginaContenido::getValor('comercializacion_paso2_titulo', 'Coordiná el pago') !!}</h5>
+                        <p class="text-muted small">{!! \App\Models\PaginaContenido::getValor('comercializacion_paso2_desc', 'Aceptamos transferencias, tarjetas de crédito/débito y pagos en efectivo al momento de la entrega.') !!}</p>
                         <img src="/images/Comercializacion/icono-coordinar.png" class="step-icon" alt="Coordiná el pago">
                     </div>
                 </div>
@@ -105,8 +105,8 @@
                 <div class="card h-100 border-0 shadow-sm p-4 rounded-4 position-relative">
                     <div class="step-number">03</div>
                     <div class="mt-4 text-center">
-                        <h5 class="fw-bold text-uppercase">Recibí y entrená</h5>
-                        <p class="text-muted small">Enviamos a todo el NEA. Si sos de Corrientes o Resistencia, recibís en el día con nuestro cadete exclusivo.</p>
+                        <h5 class="fw-bold text-uppercase">{!! \App\Models\PaginaContenido::getValor('comercializacion_paso3_titulo', 'Recibí y entrená') !!}</h5>
+                        <p class="text-muted small">{!! \App\Models\PaginaContenido::getValor('comercializacion_paso3_desc', 'Enviamos a todo el NEA. Si sos de Corrientes o Resistencia, recibís en el día con nuestro cadete exclusivo.') !!}</p>
                         <img src="/images/Comercializacion/icono-envios.png" class="step-icon" alt="Recibí y entrená">
                     </div>
                 </div>

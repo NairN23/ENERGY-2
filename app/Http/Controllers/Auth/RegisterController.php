@@ -18,21 +18,14 @@ class RegisterController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'direccion' => 'required|string|max:255',
-            'ciudad' => 'required|string|max:255',
-            'provincia' => 'required|string|max:255',
-            'cp' => 'required|string|max:10',
         ]);
 
-        // 2. Creamos el usuario en tu tabla de MariaDB
+        // 2. Creamos el usuario cliente en MariaDB
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password), // Encriptamos la clave por seguridad
-            'direccion' => $request->direccion,
-            'ciudad' => $request->ciudad,
-            'provincia' => $request->provincia,
-            'cp' => $request->cp,
+            'role' => 'client',
         ]);
 
         // MODIFICADO: En vez de loguearlo automáticamente acá, lo redireccionamos al Login con un mensaje de éxito

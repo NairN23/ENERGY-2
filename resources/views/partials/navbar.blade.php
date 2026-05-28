@@ -142,8 +142,12 @@
 <nav class="navbar navbar-expand-xl navbar-light border-bottom sticky-top py-3 energy-navbar">
     <div class="container">
         <a class="navbar-brand fw-bold" href="/">
-            <span>ENERGY</span>
-            <span class="brand-subtitle">Sports Nutrition</span>
+            @if(file_exists(public_path('images/logo.png')))
+                <img src="/images/logo.png?v={{ filemtime(public_path('images/logo.png')) }}" alt="ENERGY Logo" style="max-height: 40px; width: auto; object-fit: contain;">
+            @else
+                <span>ENERGY</span>
+                <span class="brand-subtitle">Sports Nutrition</span>
+            @endif
         </a>
 
         <button class="navbar-toggler" type="button" id="mainNavbarToggler" aria-controls="mainNavbar" aria-expanded="false" aria-label="Abrir menú de navegación">
@@ -175,11 +179,27 @@
                                 <span class="dropdown-item-text text-muted">Hola, <strong>{{ auth()->user()->name }}</strong></span>
                             </li>
                             <li><hr class="dropdown-divider"></li>
+                            
+                            @if(auth()->user()->role === 'admin')
+                                <li>
+                                    <a class="dropdown-item fw-bold text-dark" href="{{ route('admin.index') }}">
+                                        <i class="bi bi-sliders me-2 text-danger"></i> Panel Admin
+                                    </a>
+                                </li>
+                            @endif
+                            @if(auth()->user()->role !== 'admin')
+                                <li>
+                                    <a class="dropdown-item fw-bold text-dark" href="{{ route('mis-compras') }}">
+                                        <i class="bi bi-bag-check me-2 text-danger"></i> Mis Compras
+                                    </a>
+                                </li>
+                            @endif
                             <li>
                                 <a class="dropdown-item" href="/">
                                     <i class="bi bi-house me-2"></i> Inicio
                                 </a>
                             </li>
+                            <li><hr class="dropdown-divider"></li>
                             <li>
                                 {{-- MODIFICADO: Llama a la función JS que inyecta los datos locales antes del Logout --}}
                                 <a class="dropdown-item text-danger fw-bold" href="#" onclick="event.preventDefault(); prepararLogoutYGuardar();">
@@ -217,7 +237,7 @@
 
 <script>
     /**
-     * LOGOUT SINCRONIZADO CON MARIADB
+     * LOGOUT SINCRONIZADO WITH MARIADB
      * Copia los productos actuales del localStorage al formulario oculto antes del envío.
      */
     function prepararLogoutYGuardar() {
@@ -233,10 +253,37 @@
     function syncCartBadge() {
         const badge = document.getElementById('cart-count-badge');
         
-        {{-- Limpieza preventiva e inmediata del almacenamiento local si ingresa un visitante --}}
-        @guest
-            localStorage.removeItem('energy_cart');
-        @endguest
+        {{-- Sincronización bidireccional inmediata para usuarios autenticados --}}
+        @auth
+            @php
+                $dbItems = \App\Models\Carrito::where('user_id', auth()->id())->with('producto')->get();
+                $cartFormatted = $dbItems->map(function ($item) {
+                    if ($item->producto) {
+                        return [
+                            'id'    => $item->producto->id,
+                            'name'  => $item->producto->nombre,
+                            'price' => $item->producto->precio,
+                        ];
+                    }
+                    return null;
+                })->filter()->values();
+            @endphp
+            
+            // Inyectamos y fusionamos el carrito de MariaDB con el localStorage del navegador
+            (function() {
+                const dbCart = {!! $cartFormatted->toJson() !!};
+                let localCart = JSON.parse(localStorage.getItem('energy_cart')) || [];
+                
+                dbCart.forEach(dbItem => {
+                    const exists = localCart.some(localItem => localItem.id === dbItem.id);
+                    if (!exists) {
+                        localCart.push(dbItem);
+                    }
+                });
+                
+                localStorage.setItem('energy_cart', JSON.stringify(localCart));
+            })();
+        @endauth
 
         if (badge) {
             const cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
@@ -254,7 +301,7 @@
 
     /**
      * LÓGICA DEL BOTÓN MÓVIL (MENU HAMBURGUESA)
-     * Asegura que el menú abra y cierre correctamente y actualice los estados de accesibilidad.
+     * Asegura que el menú abre y cierre correctamente y actualice los estados de accesibilidad.
      */
     document.addEventListener('DOMContentLoaded', () => {
         const toggler = document.getElementById('mainNavbarToggler');

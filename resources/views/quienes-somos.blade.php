@@ -86,10 +86,10 @@
     <div class="container py-5">
         
         <div class="text-center mb-5">
-            <h2 class="fw-bold italic text-uppercase">¿Quiénes Somos?</h2>
+            <h2 class="fw-bold italic text-uppercase">{!! \App\Models\PaginaContenido::getValor('quienes_somos_principal_titulo', '¿Quiénes Somos?') !!}</h2>
             <hr class="mx-auto bg-danger border-danger" style="width: 50px; height: 3px; opacity: 1;">
             <p class="col-md-8 mx-auto mt-4 about-text">
-                Nacimos de la pasión por el deporte en Corrientes. En <span class="text-danger fw-bold">ENERGY</span>, profesionalizamos la nutrición deportiva para que alcances tus metas de forma segura y constante. Sabemos que detrás de cada entrenamiento hay un objetivo claro, y estamos acá para darte el combustible exacto que necesitás para superar.
+                {!! \App\Models\PaginaContenido::getValor('quienes_somos_principal_texto', 'Nacimos de la pasión por el deporte en Corrientes. En <span class="text-danger fw-bold">ENERGY</span>, profesionalizamos la nutrición deportiva para que alcances tus metas de forma segura y constante. Sabemos que detrás de cada entrenamiento hay un objetivo claro, y estamos acá para darte el combustible exacto que necesitás para superar.') !!}
             </p>
         </div>
 
@@ -100,12 +100,12 @@
             </div>
             <div class="col-md-6 offset-md-1">
                 <div class="about-content">
-                    <h3 class="fw-bold text-uppercase mb-3 about-section-title">Calidad Premium</h3>
+                    <h3 class="fw-bold text-uppercase mb-3 about-section-title">{!! \App\Models\PaginaContenido::getValor('quienes_somos_calidad_titulo', 'Calidad Premium') !!}</h3>
                     <p class="about-text about-copy">
-                        Trabajamos exclusivamente con laboratorios certificados y marcas líderes en el rubro de la nutrición deportiva. Entendemos que alcanzar tu mejor versión requiere dedicación, y por ello, tu salud es nuestra máxima prioridad. Cada suplemento que sale de nuestra tienda ha sido seleccionado bajo los más estrictos estándares de calidad, garantizando que recibas fórmulas puras, seguras y respaldadas por la ciencia.
+                        {!! \App\Models\PaginaContenido::getValor('quienes_somos_calidad_texto1', 'Trabajamos exclusivamente con laboratorios certificados y marcas líderes en el rubro de la nutrición deportiva. Entendemos que alcanzar tu mejor versión requiere dedicación, y por ello, tu salud es nuestra máxima prioridad. Cada suplemento que sale de nuestra tienda ha sido seleccionado bajo los más estrictos estándares de calidad, garantizando que recibas fórmulas puras, seguras y respaldadas por la ciencia.') !!}
                     </p>
                     <p class="about-text about-copy mb-0">
-                        Nuestro equipo se encarga de auditar constantemente el origen y la originalidad de todo nuestro stock. Al elegirnos, no solo estás comprando un producto, sino que estás invirtiendo en la tranquilidad de saber que consumís suplementación con sellos de autenticidad verificados, fechas de caducidad controladas y el respaldo de una tienda que se toma tu rendimiento tan en serio como vos.
+                        {!! \App\Models\PaginaContenido::getValor('quienes_somos_calidad_texto2', 'Nuestro equipo se encarga de auditar constantemente el origen y la originalidad de todo nuestro stock. Al elegirnos, no solo estás comprando un producto, sino que estás invirtiendo en la tranquilidad de saber que consumís suplementación con sellos de autenticidad verificados, fechas de caducidad controladas y el respaldo de una tienda que se toma tu rendimiento tan en serio como vos.') !!}
                     </p>
                 </div>
             </div>
@@ -118,9 +118,9 @@
             </div>
             <div class="col-md-6">
                 <div class="about-content text-md-end">
-                    <h3 class="fw-bold text-uppercase mb-3 about-section-title">Máxima Energía</h3>
+                    <h3 class="fw-bold text-uppercase mb-3 about-section-title">{!! \App\Models\PaginaContenido::getValor('quienes_somos_energia_titulo', 'Máxima Energía') !!}</h3>
                     <p class="about-text about-copy mb-0">
-                        Entendemos lo que tu cuerpo necesita para que potencies tu rendimiento en cada repetición. Nuestro diferencial es simple: no solo vendemos, te asesoramos. Ya con la garantía de estar consumiendo lo mejor, nuestro equipo se enfoca en escucharte. Entendemos tus metas, ya sea ganar masa muscular o acelerar tu recuperación, y te guiamos para elegir exactamente lo que tu metabolismo exige para romper tus propios límites.
+                        {!! \App\Models\PaginaContenido::getValor('quienes_somos_energia_texto', 'Entendemos lo que tu cuerpo necesita para que potencies tu rendimiento en cada repetición. Nuestro diferencial es simple: no solo vendemos, te asesoramos. Ya con la garantía de estar consumiendo lo mejor, nuestro equipo se enfoca en escucharte. Entendemos tus metas, ya sea ganar masa muscular o acelerar tu recuperación, y te guiamos para elegir exactamente lo que tu metabolismo exige para romper tus propios límites.') !!}
                     </p>
                 </div>
             </div>

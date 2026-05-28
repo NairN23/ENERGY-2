@@ -107,235 +107,116 @@
     @include('partials.navbar')
 
     <div class="container py-5">
-        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-            
-            <div class="col">
-                <div class="card product-card shadow-sm h-100">
-                    <div class="img-wrapper">
-                        <img src="/images/productos/Premium Whey Protein Sta.png" alt="Star Nutrition">
-                    </div>
-                    <div class="card-body p-0">
-                        <span class="category-tag">Proteínas</span>
-                        <h6 class="product-name">Premium Whey Protein Star Nutrition 2lb</h6>
-                        <p class="product-description">Proteína de suero de máxima pureza para recuperación muscular.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="price-text">$38500</span>
-                            
-                            @auth
-                                <button class="btn-add add-to-cart" data-name="Premium Whey Star" data-price="38500">
-                                    <i class="bi bi-plus-lg fs-5"></i>
-                                </button>
-                            @endauth
-                            @guest
-                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
-                                    <i class="bi bi-lock-fill fs-5"></i>
-                                </a>
-                            @endguest
-                        </div>
-                    </div>
-                </div>
-            </div>
+        @php use Illuminate\Support\Str; @endphp
 
-            <div class="col">
-                <div class="card product-card shadow-sm h-100">
-                    <div class="img-wrapper">
-                        <img src="/images/productos/Creatina Monohidrato.png .png" alt="HTN">
-                    </div>
-                    <div class="card-body p-0">
-                        <span class="category-tag">Fuerza</span>
-                        <h6 class="product-name">Creatina Monohidrato HTN 300g</h6>
-                        <p class="product-description">Aumenta tu potencia muscular y fuerza explosiva diaria.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="price-text">$24000</span>
-                            
-                            @auth
-                                <button class="btn-add add-to-cart" data-name="Creatina HTN" data-price="24000">
-                                    <i class="bi bi-plus-lg fs-5"></i>
-                                </button>
-                            @endauth
-                            @guest
-                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
-                                    <i class="bi bi-lock-fill fs-5"></i>
-                                </a>
-                            @endguest
-                        </div>
-                    </div>
-                </div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="fw-bold mb-1">Catálogo de Suplementos</h1>
+                <p class="text-muted mb-0">Todos los productos disponibles en ENERGY con sus categorías y precios actualizados.</p>
             </div>
-
-            <div class="col">
-                <div class="card product-card shadow-sm h-100">
-                    <div class="img-wrapper">
-                        <img src="/images/productos/Pump V8 Pre-Workout Star Nutrition.png" alt="Star Nutrition">
-                    </div>
-                    <div class="card-body p-0">
-                        <span class="category-tag">Pre-Entreno</span>
-                        <h6 class="product-name">Pump V8 Pre-Workout Star Nutrition</h6>
-                        <p class="product-description">Fórmula diseñada para máxima energía y vascularización.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="price-text">$19500</span>
-                            
-                            @auth
-                                <button class="btn-add add-to-cart" data-name="Pump V8 Star" data-price="19500">
-                                    <i class="bi bi-plus-lg fs-5"></i>
-                                </button>
-                            @endauth
-                            @guest
-                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
-                                    <i class="bi bi-lock-fill fs-5"></i>
-                                </a>
-                            @endguest
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="card product-card shadow-sm h-100">
-                    <div class="img-wrapper">
-                        <img src="/images/productos/L-Carnitina 1500.png" alt="Gentech">
-                    </div>
-                    <div class="card-body p-0">
-                        <span class="category-tag">Quemadores</span>
-                        <h6 class="product-name">L-Carnitina 1500 Gentech Liquida</h6>
-                        <p class="product-description">Favorece la movilización de grasas para obtener energía.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="price-text">$16800</span>
-                            
-                            @auth
-                                <button class="btn-add add-to-cart" data-name="L-Carnitina Gentech" data-price="16800">
-                                    <i class="bi bi-plus-lg fs-5"></i>
-                                </button>
-                            @endauth
-                            @guest
-                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
-                                    <i class="bi bi-lock-fill fs-5"></i>
-                                </a>
-                            @endguest
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="card product-card shadow-sm h-100">
-                    <div class="img-wrapper">
-                        <img src="/images/productos/BCAA.png" alt="Star Nutrition">
-                    </div>
-                    <div class="card-body p-0">
-                        <span class="category-tag">Aminoácidos</span>
-                        <h6 class="product-name">BCAA 2:1:1 Star Nutrition 200g</h6>
-                        <p class="product-description">Mantiene y recupera las fibras musculares fatigadas.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="price-text">$17800</span>
-                            
-                            @auth
-                                <button class="btn-add add-to-cart" data-name="BCAA Star" data-price="17800">
-                                    <i class="bi bi-plus-lg fs-5"></i>
-                                </button>
-                            @endauth
-                            @guest
-                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
-                                    <i class="bi bi-lock-fill fs-5"></i>
-                                </a>
-                            @endguest
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="card product-card shadow-sm h-100">
-                    <div class="img-wrapper">
-                        <img src="/images/productos/Iso Whey Protein.png" alt="ENA">
-                    </div>
-                    <div class="card-body p-0">
-                        <span class="category-tag">Proteínas</span>
-                        <h6 class="product-name">Iso Whey Protein ENA Nutrition 2lb</h6>
-                        <p class="product-description">Proteína aislada de máxima absorción, baja en sodio.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="price-text">$42000</span>
-                            
-                            @auth
-                                <button class="btn-add add-to-cart" data-name="Iso Whey ENA" data-price="42000">
-                                    <i class="bi bi-plus-lg fs-5"></i>
-                                </button>
-                            @endauth
-                            @guest
-                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
-                                    <i class="bi bi-lock-fill fs-5"></i>
-                                </a>
-                            @endguest
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="card product-card shadow-sm h-100">
-                    <div class="img-wrapper">
-                        <img src="/images/productos/Glutamina.png" alt="ENA">
-                    </div>
-                    <div class="card-body p-0">
-                        <span class="category-tag">Recuperación</span>
-                        <h6 class="product-name">Glutamina Micronizada ENA 250g</h6>
-                        <p class="product-description">Ideal para evitar el catabolismo y mejorar defensas.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="price-text">$21500</span>
-                            
-                            @auth
-                                <button class="btn-add add-to-cart" data-name="Glutamina ENA" data-price="21500">
-                                    <i class="bi bi-plus-lg fs-5"></i>
-                                </button>
-                            @endauth
-                            @guest
-                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
-                                    <i class="bi bi-lock-fill fs-5"></i>
-                                </a>
-                            @endguest
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col">
-                <div class="card product-card shadow-sm h-100">
-                    <div class="img-wrapper">
-                        <img src="/images/productos/Multivitamínico .png" alt="Gentech">
-                    </div>
-                    <div class="card-body p-0">
-                        <span class="category-tag">Salud</span>
-                        <h6 class="product-name">Multivitamínico Daily Complete</h6>
-                        <p class="product-description">Aporta todos los micronutrientes para el día a día.</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="price-text">$14500</span>
-                            
-                            @auth
-                                <button class="btn-add add-to-cart" data-name="Multivitamin" data-price="14500">
-                                    <i class="bi bi-plus-lg fs-5"></i>
-                                </button>
-                            @endauth
-                            @guest
-                                <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
-                                    <i class="bi bi-lock-fill fs-5"></i>
-                                </a>
-                            @endguest
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            @auth
+                @if(auth()->user()->role === 'admin')
+                    <a href="{{ route('admin.index') }}" class="btn btn-danger rounded-pill px-4 fw-bold">Ir al Panel</a>
+                @endif
+            @endauth
         </div>
+
+        @if(isset($productos) && $productos->count())
+            @php
+                $uniqueCategories = $productos->map(function($p) {
+                    return $p->categoria;
+                })->filter()->unique('id')->values();
+            @endphp
+
+            <!-- FILTRO DE CATEGORÍAS -->
+            <div class="d-flex flex-wrap gap-2 mb-4 align-items-center bg-white p-3 shadow-sm" style="border-radius: 12px;">
+                <span class="text-uppercase fw-bold small text-muted me-2"><i class="bi bi-funnel-fill text-danger me-1"></i> Filtrar Categorías:</span>
+                <button class="btn btn-sm btn-dark rounded-pill px-3 py-1.5 fw-bold text-uppercase filter-btn active" data-category="all" style="font-size: 0.72rem; letter-spacing: 0.5px;">Todos</button>
+                @foreach($uniqueCategories as $cat)
+                    <button class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1.5 fw-bold text-uppercase filter-btn" data-category="{{ $cat->id }}" style="font-size: 0.72rem; letter-spacing: 0.5px;">{{ $cat->nombre }}</button>
+                @endforeach
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                @foreach($productos as $producto)
+                    <div class="col product-item" data-category-id="{{ $producto->categoria->id ?? 0 }}" style="transition: opacity 0.25s ease, transform 0.25s ease;">
+                        <div class="card product-card shadow-sm h-100">
+                            <div class="img-wrapper position-relative">
+                                <img src="{{ $producto->imagen ?? '/images/productos/default.png' }}" alt="{{ $producto->nombre }}">
+                                @if($producto->destacado)
+                                    <span class="badge bg-warning text-dark position-absolute top-0 start-0 m-2 fw-bold text-uppercase" style="font-size: 0.65rem; border-radius: 6px; z-index: 2;">Destacado</span>
+                                @endif
+                                @if($producto->es_combo)
+                                    <span class="badge bg-info position-absolute top-0 end-0 m-2 fw-bold text-uppercase text-white" style="font-size: 0.65rem; border-radius: 6px; z-index: 2;">Combo ⚡</span>
+                                @endif
+                            </div>
+                            <div class="card-body p-0">
+                                <span class="category-tag">{{ $producto->categoria->nombre ?? 'Suplemento' }}</span>
+                                <h6 class="product-name">{{ $producto->nombre }}</h6>
+                                <p class="product-description">{{ Str::limit($producto->descripcion ?? 'Sin descripción disponible', 80) }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="price-text">${{ number_format($producto->precio, 2, ',', '.') }}</span>
+
+                                    @auth
+                                        <button class="btn-add add-to-cart" data-name="{{ $producto->nombre }}" data-price="{{ $producto->precio }}">
+                                            <i class="bi bi-plus-lg fs-5"></i>
+                                        </button>
+                                    @endauth
+                                    @guest
+                                        <a href="{{ route('login') }}" class="btn-add" title="Iniciá sesión para comprar">
+                                            <i class="bi bi-lock-fill fs-5"></i>
+                                        </a>
+                                    @endguest
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="alert alert-warning mt-4" role="alert">
+                No hay productos disponibles en el catálogo por el momento. Por favor, intenta nuevamente más tarde.
+            </div>
+        @endif
     </div>
 
     @include('partials.footer')
 
     <script>
-        {{-- AGREGADO: Limpieza forzada del localStorage inmediatamente si es un visitante --}}
-        @guest
-            localStorage.removeItem('energy_cart');
-            if (typeof syncCartBadge === 'function') syncCartBadge();
-        @endguest
+        // CATEGORY FILTER LOGIC
+        document.querySelectorAll('.filter-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active classes
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active', 'btn-dark');
+                    btn.classList.add('btn-outline-dark');
+                });
+                
+                // Set active to clicked
+                button.classList.add('active', 'btn-dark');
+                button.classList.remove('btn-outline-dark');
+                
+                const selectedCategory = button.getAttribute('data-category');
+                
+                document.querySelectorAll('.product-item').forEach(item => {
+                    const itemCategory = item.getAttribute('data-category-id');
+                    
+                    if (selectedCategory === 'all' || itemCategory === selectedCategory) {
+                        item.style.display = 'block';
+                        setTimeout(() => {
+                            item.style.opacity = '1';
+                            item.style.transform = 'scale(1)';
+                        }, 20);
+                    } else {
+                        item.style.opacity = '0';
+                        item.style.transform = 'scale(0.95)';
+                        setTimeout(() => {
+                            item.style.display = 'none';
+                        }, 200);
+                    }
+                });
+            });
+        });
 
         /**
          * Lógica del carrito:

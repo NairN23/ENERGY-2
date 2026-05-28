@@ -88,7 +88,13 @@
     <div class="container">
         <div class="row g-4">
             <div class="col-lg-4">
-                <a href="/" class="footer-brand">ENERGY<span>.</span></a>
+                @if(file_exists(public_path('images/logo.png')))
+                    <a href="/" class="d-block mb-3">
+                        <img src="/images/logo.png?v={{ filemtime(public_path('images/logo.png')) }}" alt="ENERGY Logo" style="max-height: 40px; width: auto; object-fit: contain; filter: brightness(0) invert(1);">
+                    </a>
+                @else
+                    <a href="/" class="footer-brand">ENERGY<span>.</span></a>
+                @endif
                 <p class="text-muted small">
                     Potenciando tu rendimiento con las mejores marcas nacionales e importadas en todo el NEA.
                 </p>

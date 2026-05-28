@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Carrito extends Model
 {
+    use SoftDeletes;
+
     // Indicale a Laravel cómo se llama tu tabla exacta en MariaDB si no es el plural automático
     protected $table = 'carritos'; 
 

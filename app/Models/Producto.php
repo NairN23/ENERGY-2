@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Producto extends Model
 {
+    use SoftDeletes;
     // Forzamos el nombre de la tabla en MariaDB
     protected $table = 'productos';
 
@@ -20,6 +23,15 @@ class Producto extends Model
         'precio',
         'stock',
         'activo',
+        'es_combo',
+        'destacado',
+        'productos_combo',
+    ];
+
+    protected $casts = [
+        'es_combo' => 'boolean',
+        'destacado' => 'boolean',
+        'productos_combo' => 'array',
     ];
 
     /**
@@ -36,5 +48,20 @@ class Producto extends Model
     public function carritos(): HasMany
     {
         return $this->hasMany(Carrito::class, 'producto_id');
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($producto) {
+            if (empty($producto->slug) && ! empty($producto->nombre)) {
+                $base = Str::slug($producto->nombre);
+                $slug = $base;
+                $i = 1;
+                while (self::where('slug', $slug)->exists()) {
+                    $slug = $base . '-' . $i++;
+                }
+                $producto->slug = $slug;
+            }
+        });
     }
 }

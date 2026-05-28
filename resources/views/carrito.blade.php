@@ -67,12 +67,16 @@
                         <span class="fw-bold fs-5 text-danger" id="total">$0</span>
                     </div>
                     
-                    <button onclick="enviarPedidoWhatsApp()" class="btn btn-danger w-100 py-3 fw-bold rounded-pill text-uppercase shadow">
+                    <button onclick="enviarPedidoWhatsApp()" class="btn btn-outline-dark w-100 py-3 mb-2 fw-bold rounded-pill text-uppercase shadow-sm">
                         <i class="bi bi-whatsapp me-2"></i> Finalizar por WhatsApp
                     </button>
+
+                    <a href="{{ route('compra.confirmar') }}" class="btn btn-danger w-100 py-3 fw-bold rounded-pill text-uppercase shadow" id="btnCheckoutOnline">
+                        <i class="bi bi-shield-check me-2"></i> Pagar Online / Transferencia
+                    </a>
                     
                     <p class="text-center text-muted mt-3" style="font-size: 0.7rem;">
-                        Al hacer clic, se abrirá un chat con el detalle de tu pedido.
+                        Paga de forma segura online o por transferencia y obtén tu comprobante al instante.
                     </p>
                 </div>
             </div>
@@ -107,6 +111,7 @@
             const actionsContainer = document.getElementById('cart-actions-container');
             const subtotalEl = document.getElementById('subtotal');
             const totalEl = document.getElementById('total');
+            const btnCheckoutOnline = document.getElementById('btnCheckoutOnline');
 
             if (cart.length === 0) {
                 listContainer.innerHTML = '';
@@ -114,11 +119,21 @@
                 actionsContainer.style.display = 'none';
                 subtotalEl.innerText = '$0';
                 totalEl.innerText = '$0';
+                if(btnCheckoutOnline) {
+                    btnCheckoutOnline.style.pointerEvents = 'none';
+                    btnCheckoutOnline.classList.add('disabled', 'btn-secondary');
+                    btnCheckoutOnline.classList.remove('btn-danger');
+                }
                 return;
             }
 
             emptyMsg.style.display = 'none';
             actionsContainer.style.display = 'block';
+            if(btnCheckoutOnline) {
+                btnCheckoutOnline.style.pointerEvents = 'auto';
+                btnCheckoutOnline.classList.remove('disabled', 'btn-secondary');
+                btnCheckoutOnline.classList.add('btn-danger');
+            }
             let html = '';
             let total = 0;
 

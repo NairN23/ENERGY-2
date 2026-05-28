@@ -41,43 +41,72 @@
     @include('partials.navbar')
 
     <div id="heroEnergyCarousel" class="carousel slide hero-carousel" data-bs-ride="carousel" data-bs-interval="4500">
-        <div class="carousel-indicators">
-            <button type="button" data-bs-target="#heroEnergyCarousel" data-bs-slide-to="0" class="active"></button>
-            <button type="button" data-bs-target="#heroEnergyCarousel" data-bs-slide-to="1"></button>
-            <button type="button" data-bs-target="#heroEnergyCarousel" data-bs-slide-to="2"></button>
-        </div>
-        <div class="carousel-inner">
-            <div class="carousel-item active">
-                <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=2000" class="d-block w-100 carousel-image" alt="Gym">
-                <div class="carousel-caption text-center">
-                    <h1 class="hero-title text-uppercase">Potenciá <br> <span class="text-accent">tu mejor versión</span></h1>
+        @if(isset($slides) && $slides->count() > 0)
+            <div class="carousel-indicators">
+                @foreach($slides as $index => $slide)
+                    <button type="button" data-bs-target="#heroEnergyCarousel" data-bs-slide-to="{{ $index }}" class="{{ $index === 0 ? 'active' : '' }}" aria-current="{{ $index === 0 ? 'true' : 'false' }}"></button>
+                @endforeach
+            </div>
+            <div class="carousel-inner">
+                @foreach($slides as $index => $slide)
+                    <div class="carousel-item {{ $index === 0 ? 'active' : '' }}">
+                        <img src="{{ $slide->imagen }}" class="d-block w-100 carousel-image" alt="{{ $slide->titulo_blanco ?? 'ENERGY' }}">
+                        <div class="carousel-caption text-center">
+                            <h1 class="hero-title text-uppercase">
+                                {{ $slide->titulo_blanco }} <br> 
+                                <span class="text-accent">{{ $slide->titulo_rojo }}</span>
+                            </h1>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div class="carousel-inner">
+                <div class="carousel-item active">
+                    <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80&w=2000" class="d-block w-100 carousel-image" alt="Gym">
+                    <div class="carousel-caption text-center">
+                        <h1 class="hero-title text-uppercase">Potenciá <br> <span class="text-accent">tu mejor versión</span></h1>
+                    </div>
                 </div>
             </div>
-            <div class="carousel-item">
-                <img src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=2000" class="d-block w-100 carousel-image" alt="Supps">
-                <div class="carousel-caption text-center">
-                    <h1 class="hero-title text-uppercase">Calidad <br> <span class="text-accent">Garantizada</span></h1>
-                </div>
-            </div>
-            <div class="carousel-item">
-                <img src="https://inlitoral.info/images/resize/466900.webp?fm=webp" class="d-block w-100 carousel-image" alt="Envios NEA">
-                <div class="carousel-caption text-center">
-                    <h1 class="hero-title text-uppercase">Envíos a <br> <span class="text-accent">Todo el NEA</span></h1>
-                </div>
-            </div>
-        </div>
+        @endif
     </div>
 
-    <section class="py-4 bg-white border-bottom">
+    <!-- PRODUCTOS DESTACADOS -->
+    <section class="py-5 bg-white border-bottom">
         <div class="container">
-            <div class="row row-cols-3 row-cols-md-6 g-3 align-items-center justify-content-center text-center">
-                <div class="col"><div class="brand-item"><div class="brand-badge">ENA</div><span class="brand-name-small">Ena</span></div></div>
-                <div class="col"><div class="brand-item"><div class="brand-badge">STAR</div><span class="brand-name-small">Star</span></div></div>
-                <div class="col"><div class="brand-item"><div class="brand-badge">HTN</div><span class="brand-name-small">Htn</span></div></div>
-                <div class="col"><div class="brand-item"><div class="brand-badge">GENT</div><span class="brand-name-small">Gentech</span></div></div>
-                <div class="col"><div class="brand-item"><div class="brand-badge">XTR</div><span class="brand-name-small">Xtrenght</span></div></div>
-                <div class="col"><div class="brand-item"><div class="brand-badge">ON</div><span class="brand-name-small">Optimum</span></div></div>
+            <div class="text-center mb-5">
+                <h2 class="fw-bold text-uppercase text-dark" style="letter-spacing: 1.5px;">Productos <span class="text-danger">Destacados</span></h2>
+                <p class="text-muted small">La mejor selección de suplementos de ENERGY para maximizar tu potencia y rendimiento.</p>
             </div>
+            
+            @if(isset($destacados) && $destacados->count() > 0)
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 justify-content-center">
+                    @foreach($destacados as $producto)
+                        <div class="col">
+                            <div class="card h-100 border-0 shadow-sm overflow-hidden" style="border-radius: 12px; transition: 0.3s; background-color: #fcfcfc; border: 1px solid #f1f1f1 !important;">
+                                <div class="position-relative" style="height: 200px; overflow: hidden; background-color: #fff; display: flex; align-items: center; justify-content: center;">
+                                    <img src="{{ $producto->imagen ?? '/images/productos/default.png' }}" class="card-img-top" style="max-height: 170px; width: auto; object-fit: contain; padding: 10px;" alt="{{ $producto->nombre }}">
+                                    <span class="badge bg-danger position-absolute top-0 start-0 m-3 fw-bold text-uppercase shadow-sm" style="font-size: 0.65rem; border-radius: 4px; z-index: 2;">Destacado 🔥</span>
+                                </div>
+                                <div class="card-body d-flex flex-column p-3">
+                                    <span class="text-danger fw-bold text-uppercase mb-1" style="font-size: 0.65rem; letter-spacing: 0.5px;">{{ $producto->categoria->nombre ?? 'Suplemento' }}</span>
+                                    <h6 class="fw-bold text-dark mb-2 text-truncate" title="{{ $producto->nombre }}">{{ $producto->nombre }}</h6>
+                                    <p class="text-muted small mb-3 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.4; font-size: 0.75rem;">
+                                        {{ $producto->descripcion ?? 'Sin descripción disponible.' }}
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2 border-top">
+                                        <span class="fw-bold text-dark fs-6">${{ number_format($producto->precio, 2, ',', '.') }}</span>
+                                        <a href="/catalogo" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.5px;">Ver en Tienda</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="text-center py-5 text-muted small">No hay suplementos destacados configurados en este momento.</div>
+            @endif
         </div>
     </section>
 
