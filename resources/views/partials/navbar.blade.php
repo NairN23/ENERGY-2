@@ -180,14 +180,14 @@
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             
-                            @if(auth()->user()->role === 'admin')
+                            @if(auth()->user()->isAdmin())
                                 <li>
                                     <a class="dropdown-item fw-bold text-dark" href="{{ route('admin.index') }}">
                                         <i class="bi bi-sliders me-2 text-danger"></i> Panel Admin
                                     </a>
                                 </li>
                             @endif
-                            @if(auth()->user()->role !== 'admin')
+                            @if(!auth()->user()->isAdmin())
                                 <li>
                                     <a class="dropdown-item fw-bold text-dark" href="{{ route('mis-compras') }}">
                                         <i class="bi bi-bag-check me-2 text-danger"></i> Mis Compras

@@ -88,6 +88,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.index');
         Route::post('/admin/paginas/guardar', [AdminController::class, 'editarPagina']);
         Route::post('/admin/usuarios/guardar', [AdminController::class, 'storeUsuario'])->name('admin.usuarios.store');
+        Route::put('/admin/usuarios/{usuario}', [AdminController::class, 'updateUsuario'])->name('admin.usuarios.update');
+        Route::post('/admin/usuarios/{usuario}/reset-password', [AdminController::class, 'resetPasswordUsuario'])->name('admin.usuarios.reset-password');
+        Route::delete('/admin/usuarios/{usuario}', [AdminController::class, 'destroyUsuario'])->name('admin.usuarios.destroy');
         
         // Rutas para mensajes de contacto
         Route::patch('/admin/mensajes/{id}/leer', [AdminController::class, 'marcarMensajeLeido'])->name('admin.mensajes.leer');

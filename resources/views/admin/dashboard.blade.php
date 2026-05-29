@@ -81,6 +81,16 @@
                     </div>
                 @endif
 
+                @if(session('generated_password'))
+                    <div class="alert alert-warning border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                        <div class="fw-bold mb-1"><i class="bi bi-key-fill me-2"></i> Contraseña temporal generada</div>
+                        <div class="small text-dark">
+                            Usuario: {{ session('generated_password.name') }} ({{ session('generated_password.email') }})<br>
+                            Nueva clave: <span class="fw-bold">{{ session('generated_password.password') }}</span>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="tab-content" id="adminTabContent">
                     
                     <!-- PESTAÑA 1: GESTIÓN DE PRODUCTOS (CRUD) -->
@@ -258,41 +268,74 @@
                         </div>
                     </div>
 
-                    <!-- PESTAÑA 4: CLIENTES REGISTRADOS -->
+                    <!-- PESTAÑA 4: GESTIÓN DE USUARIOS -->
                     <div class="tab-pane fade" id="usuarios-pane" role="tabpanel">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
                             <div>
-                                <h3 class="fw-bold text-uppercase m-0">Clientes <span class="text-danger">Registrados</span></h3>
-                                <p class="text-muted small mb-0">Total de {{ $totales['usuarios'] }} usuarios en el sistema.</p>
+                                <h3 class="fw-bold text-uppercase m-0">Gestión de <span class="text-danger">Usuarios</span></h3>
+                                <p class="text-muted small mb-0">Administradores: {{ $totales['usuarios_admin'] }} | Clientes: {{ $totales['usuarios_cliente'] }} | Total: {{ $totales['usuarios'] }}</p>
                             </div>
-                            <button class="btn btn-danger rounded-pill px-4" type="button" data-bs-toggle="collapse" data-bs-target="#crearClienteForm" aria-expanded="false" aria-controls="crearClienteForm">
-                                Crear Cliente
-                            </button>
+                            <div class="d-flex flex-wrap gap-2">
+                                <form action="{{ route('admin.index') }}" method="GET" class="d-flex gap-2 align-items-center" id="usuariosRoleFilterForm" autocomplete="off">
+                                    <input type="hidden" name="tab" value="usuarios">
+                                    <select name="rol" id="usuariosRoleFilter" class="form-select form-select-sm" style="min-width: 180px; border-radius: 999px;">
+                                        <option value="todos" {{ $roleFilter === 'todos' ? 'selected' : '' }}>Todos los roles</option>
+                                        @foreach($roles as $roleValue => $roleLabel)
+                                            <option value="{{ $roleValue }}" {{ $roleFilter === $roleValue ? 'selected' : '' }}>{{ $roleLabel }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit" class="btn btn-outline-dark rounded-pill px-3">Filtrar</button>
+                                </form>
+                                <button class="btn btn-danger rounded-pill px-4" type="button" data-bs-toggle="collapse" data-bs-target="#crearUsuarioForm" aria-expanded="false" aria-controls="crearUsuarioForm">
+                                    Crear Usuario
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="collapse mb-4" id="crearClienteForm">
+                        @if($errors->any())
+                            <div class="alert alert-danger border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                                <p class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i> No se pudo completar la operación sobre usuarios:</p>
+                                <ul class="mb-0 small ps-3">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        <div class="collapse mb-4 {{ $activeTab === 'usuarios' && $errors->any() ? 'show' : '' }}" id="crearUsuarioForm">
                             <div class="dashboard-card shadow-sm">
-                                <form action="{{ route('admin.usuarios.store') }}" method="POST">
+                                <form action="{{ route('admin.usuarios.store', ['tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST">
                                     @csrf
+                                    <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
                                     <div class="row g-3">
-                                        <div class="col-md-4">
+                                        <div class="col-lg-3 col-md-6">
                                             <label class="form-label small text-uppercase text-muted">Nombre</label>
-                                            <input type="text" name="name" class="form-control" required>
+                                            <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-lg-3 col-md-6">
                                             <label class="form-label small text-uppercase text-muted">Email</label>
-                                            <input type="email" name="email" class="form-control" required>
+                                            <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-lg-2 col-md-6">
+                                            <label class="form-label small text-uppercase text-muted">Rol</label>
+                                            <select name="role" class="form-select" required>
+                                                @foreach($roles as $roleValue => $roleLabel)
+                                                    <option value="{{ $roleValue }}" {{ old('role', \App\Models\User::ROLE_CLIENTE) === $roleValue ? 'selected' : '' }}>{{ $roleLabel }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-lg-2 col-md-6">
                                             <label class="form-label small text-uppercase text-muted">Contraseña</label>
-                                            <input type="password" name="password" class="form-control" required>
+                                            <input type="password" name="password" class="form-control" minlength="8" autocomplete="new-password" required>
+                                            <span class="text-muted small d-block mt-1">Mínimo 8 caracteres.</span>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-lg-2 col-md-6">
                                             <label class="form-label small text-uppercase text-muted">Confirmar clave</label>
-                                            <input type="password" name="password_confirmation" class="form-control" required>
+                                            <input type="password" name="password_confirmation" class="form-control" minlength="8" autocomplete="new-password" required>
                                         </div>
                                         <div class="col-12 text-end">
-                                            <button type="submit" class="btn btn-success rounded-pill px-4">Guardar cliente</button>
+                                            <button type="submit" class="btn btn-success rounded-pill px-4">Guardar usuario</button>
                                         </div>
                                     </div>
                                 </form>
@@ -307,7 +350,9 @@
                                             <th>Nombre completo</th>
                                             <th>Correo Electrónico</th>
                                             <th>Rol</th>
+                                            <th>Estado</th>
                                             <th>Registrado</th>
+                                            <th class="text-end">Acciones</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -318,14 +363,94 @@
                                                 </td>
                                                 <td class="small text-muted">{{ $user->email }}</td>
                                                 <td>
-                                                    <span class="badge bg-{{ $user->role === 'admin' ? 'danger' : 'primary' }} text-uppercase" style="font-size: 0.65rem;">
-                                                        {{ $user->role ?? 'client' }}
+                                                    <span class="badge bg-{{ $user->isAdmin() ? 'danger' : 'primary' }} text-uppercase" style="font-size: 0.65rem;">
+                                                        {{ $user->role_label }}
                                                     </span>
                                                 </td>
+                                                <td>
+                                                    @if($user->id === auth()->id())
+                                                        <span class="badge bg-dark-subtle text-dark">Tu cuenta</span>
+                                                    @else
+                                                        <span class="badge bg-success-subtle text-success">Activo</span>
+                                                    @endif
+                                                </td>
                                                 <td class="small">{{ $user->created_at->format('d/m/Y') }}</td>
+                                                <td class="text-end">
+                                                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                                                        <button type="button" class="btn btn-sm btn-outline-dark px-3" style="border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#editarUsuarioModal{{ $user->id }}">
+                                                            Editar
+                                                        </button>
+                                                        <form action="{{ route('admin.usuarios.reset-password', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;">
+                                                            @csrf
+                                                            <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
+                                                            <button type="submit" class="btn btn-sm btn-outline-warning" style="border-radius: 8px;" onclick="return confirm('¿Generar una nueva contraseña temporal para {{ $user->name }}?');">
+                                                                Resetear clave
+                                                            </button>
+                                                        </form>
+                                                        <form action="{{ route('admin.usuarios.destroy', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro querés eliminar a este usuario?');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px;" {{ $user->id === auth()->id() ? 'disabled' : '' }}>
+                                                                Eliminar
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
                                             </tr>
+
+                                            <div class="modal fade" id="editarUsuarioModal{{ $user->id }}" tabindex="-1" aria-labelledby="editarUsuarioModalLabel{{ $user->id }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                    <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden;">
+                                                        <div class="modal-header bg-dark text-white border-0">
+                                                            <div>
+                                                                <h5 class="modal-title fw-bold text-uppercase" id="editarUsuarioModalLabel{{ $user->id }}">Editar usuario</h5>
+                                                                <span class="small text-white-50">Podés actualizar sus datos, rol o establecer una nueva contraseña manual.</span>
+                                                            </div>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body p-4">
+                                                            <form action="{{ route('admin.usuarios.update', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST">
+                                                                @csrf
+                                                                @method('PUT')
+                                                                <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
+                                                                <div class="row g-3">
+                                                                    <div class="col-md-6">
+                                                                        <label class="form-label small text-uppercase text-muted">Nombre</label>
+                                                                        <input type="text" name="name" class="form-control" value="{{ $user->name }}" required>
+                                                                    </div>
+                                                                    <div class="col-md-6">
+                                                                        <label class="form-label small text-uppercase text-muted">Email</label>
+                                                                        <input type="email" name="email" class="form-control" value="{{ $user->email }}" required>
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <label class="form-label small text-uppercase text-muted">Rol</label>
+                                                                        <select name="role" class="form-select" required>
+                                                                            @foreach($roles as $roleValue => $roleLabel)
+                                                                                <option value="{{ $roleValue }}" {{ $user->role === $roleValue ? 'selected' : '' }}>{{ $roleLabel }}</option>
+                                                                            @endforeach
+                                                                        </select>
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <label class="form-label small text-uppercase text-muted">Nueva contraseña</label>
+                                                                        <input type="password" name="password" class="form-control" placeholder="Opcional" minlength="8" autocomplete="new-password">
+                                                                    </div>
+                                                                    <div class="col-md-4">
+                                                                        <label class="form-label small text-uppercase text-muted">Confirmar nueva contraseña</label>
+                                                                        <input type="password" name="password_confirmation" class="form-control" placeholder="Opcional" minlength="8" autocomplete="new-password">
+                                                                    </div>
+                                                                    <div class="col-12 d-flex justify-content-end gap-2 mt-2">
+                                                                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                                                                        <button type="submit" class="btn btn-danger rounded-pill px-4">Guardar cambios</button>
+                                                                    </div>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @empty
-                                            <tr><td colspan="4" class="text-center py-4 text-muted small">No hay otros clientes registrados en el sistema.</td></tr>
+                                            <tr><td colspan="6" class="text-center py-4 text-muted small">No hay usuarios activos para el filtro seleccionado.</td></tr>
                                         @endforelse
                                     </tbody>
                                 </table>
@@ -586,5 +711,120 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const activeTab = @json($activeTab);
+            let currentRoleFilter = @json($roleFilter);
+            const userRoleFilterForm = document.getElementById('usuariosRoleFilterForm');
+            const userRoleFilterSelect = document.getElementById('usuariosRoleFilter');
+            const userActionForms = Array.from(document.querySelectorAll('#usuarios-pane form')).filter((form) => {
+                return form.querySelector('input[name="role_filter"]');
+            });
+
+            const getSelectedRoleFilter = () => {
+                if (!userRoleFilterSelect || !userRoleFilterSelect.value) {
+                    return currentRoleFilter || 'todos';
+                }
+
+                return userRoleFilterSelect.value;
+            };
+
+            const syncUserActionFilters = () => {
+                const selectedRoleFilter = getSelectedRoleFilter();
+
+                userActionForms.forEach((form) => {
+                    const roleFilterInput = form.querySelector('input[name="role_filter"]');
+
+                    if (roleFilterInput) {
+                        roleFilterInput.value = selectedRoleFilter;
+                    }
+                });
+            };
+
+            const syncUserRoleFilter = () => {
+                if (!userRoleFilterSelect) {
+                    return;
+                }
+
+                userRoleFilterSelect.value = currentRoleFilter;
+
+                Array.from(userRoleFilterSelect.options).forEach((option) => {
+                    option.selected = option.value === currentRoleFilter;
+                });
+
+                syncUserActionFilters();
+            };
+
+            syncUserRoleFilter();
+
+            window.addEventListener('pageshow', syncUserRoleFilter);
+
+            if (activeTab !== 'productos') {
+                const trigger = document.getElementById(`${activeTab}-tab`);
+
+                if (trigger) {
+                    bootstrap.Tab.getOrCreateInstance(trigger).show();
+                }
+            }
+
+            if (activeTab === 'usuarios') {
+                const url = new URL(window.location.href);
+
+                if (!url.searchParams.get('rol')) {
+                    url.searchParams.set('rol', currentRoleFilter);
+                    url.searchParams.set('tab', 'usuarios');
+                    window.history.replaceState({}, '', url);
+                }
+            }
+
+            if (userRoleFilterForm && userRoleFilterSelect) {
+                userRoleFilterSelect.addEventListener('change', () => {
+                    currentRoleFilter = getSelectedRoleFilter();
+                    syncUserActionFilters();
+                });
+
+                userRoleFilterForm.addEventListener('submit', (event) => {
+                    event.preventDefault();
+                    currentRoleFilter = getSelectedRoleFilter();
+                    syncUserActionFilters();
+
+                    const url = new URL(userRoleFilterForm.action, window.location.origin);
+                    url.searchParams.set('tab', 'usuarios');
+                    url.searchParams.set('rol', getSelectedRoleFilter());
+
+                    window.location.assign(url.toString());
+                });
+            }
+
+            userActionForms.forEach((form) => {
+                form.addEventListener('submit', () => {
+                    syncUserActionFilters();
+                });
+            });
+
+            document.querySelectorAll('#adminTab button[data-bs-toggle="tab"]').forEach((button) => {
+                button.addEventListener('shown.bs.tab', (event) => {
+                    const tabId = event.target.id.replace('-tab', '');
+                    const url = new URL(window.location.href);
+
+                    if (tabId === 'productos') {
+                        url.searchParams.delete('tab');
+                    } else {
+                        url.searchParams.set('tab', tabId);
+                    }
+
+                    if (tabId === 'usuarios') {
+                        if (!url.searchParams.get('rol')) {
+                            url.searchParams.set('rol', currentRoleFilter);
+                        }
+                    } else {
+                        url.searchParams.delete('rol');
+                    }
+
+                    window.history.replaceState({}, '', url);
+                });
+            });
+        });
+    </script>
 </body>
 </html>

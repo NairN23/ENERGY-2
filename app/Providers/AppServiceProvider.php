@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
@@ -22,15 +23,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Si la tabla 'users' y la columna 'deleted_at' existen, creamos un admin si hace falta.
-        if (Schema::hasTable('users') && Schema::hasColumn('users', 'deleted_at')) {
-            if (! User::where('role', 'admin')->exists()) {
+        // Si las tablas necesarias existen, garantizamos los roles base y un admin activo mínimo.
+        if (Schema::hasTable('users') && Schema::hasTable('roles') && Schema::hasColumn('users', 'deleted_at') && Schema::hasColumn('users', 'role_id')) {
+            Role::ensureDefaults();
+
+            $adminRoleId = Role::idForSlug(User::ROLE_ADMIN);
+
+            if ($adminRoleId && ! User::where('role_id', $adminRoleId)->exists()) {
                 User::firstOrCreate(
                     ['email' => env('ADMIN_EMAIL', 'admin@energy.test')],
                     [
                         'name' => env('ADMIN_NAME', 'ENERGY Admin'),
                         'password' => Hash::make(env('ADMIN_PASSWORD', 'Admin1234')),
-                        'role' => 'admin',
+                        'role_id' => $adminRoleId,
                     ]
                 );
             }

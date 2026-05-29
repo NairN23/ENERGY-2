@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class RegisterController extends Controller
 {
@@ -16,7 +15,13 @@ class RegisterController extends Controller
         // 1. Validamos que todos los campos cumplan con lo necesario
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->where(fn ($query) => $query->whereNull('deleted_at')),
+            ],
             'password' => 'required|string|min:8|confirmed',
         ]);
 
@@ -24,8 +29,8 @@ class RegisterController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
-            'password' => Hash::make($request->password), // Encriptamos la clave por seguridad
-            'role' => 'client',
+            'password' => $request->password,
+            'role' => User::ROLE_CLIENTE,
         ]);
 
         // MODIFICADO: En vez de loguearlo automáticamente acá, lo redireccionamos al Login con un mensaje de éxito

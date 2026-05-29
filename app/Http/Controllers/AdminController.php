@@ -6,18 +6,30 @@ use Illuminate\Http\Request;
 use App\Models\Producto;
 use App\Models\Categoria;
 use App\Models\User;
+use App\Models\Role;
 use App\Models\Mensaje;
 use App\Models\Pedido;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
     /**
      * Carga la pantalla principal del Dashboard con todas las tablas unificadas
      */
-    public function dashboard()
+    public function dashboard(Request $request)
     {
+        $roles = Role::options();
+        $roleIds = Role::slugIdMap();
+        $roleFilter = $request->string('rol', 'todos')->toString();
+        $filtrosPermitidos = array_merge(['todos'], array_keys($roles));
+
+        if (! in_array($roleFilter, $filtrosPermitidos, true)) {
+            $roleFilter = 'todos';
+        }
+
         // 1. Traemos los suplementos con su categoría de MariaDB
         $productos = Producto::with('categoria')->get();
         $categorias = Categoria::all();
@@ -25,8 +37,20 @@ class AdminController extends Controller
         // 2. Traemos las compras/pedidos
         $pedidos = Pedido::with('user')->latest()->get();
 
-        // 3. Traemos todos los usuarios registrados (menos vos que estás logueada administrando)
-        $usuarios = User::where('id', '!=', auth()->id())->latest()->get();
+        // 3. Traemos los usuarios activos y opcionalmente filtrados por rol.
+        $usuariosQuery = User::query()->with('roleRelation')->latest();
+
+        if ($roleFilter !== 'todos') {
+            $roleId = $roleIds[$roleFilter] ?? null;
+
+            if ($roleId) {
+                $usuariosQuery->where('role_id', $roleId);
+            } else {
+                $usuariosQuery->whereRaw('1 = 0');
+            }
+        }
+
+        $usuarios = $usuariosQuery->get();
 
         // 4. Traemos los mensajes de contacto
         $mensajes = Mensaje::latest()->get();
@@ -39,14 +63,17 @@ class AdminController extends Controller
             'productos' => Producto::count(),
             'categorias' => Categoria::count(),
             'usuarios' => User::count(),
+            'usuarios_admin' => isset($roleIds[User::ROLE_ADMIN]) ? User::where('role_id', $roleIds[User::ROLE_ADMIN])->count() : 0,
+            'usuarios_cliente' => isset($roleIds[User::ROLE_CLIENTE]) ? User::where('role_id', $roleIds[User::ROLE_CLIENTE])->count() : 0,
             'pedidos' => Pedido::count(),
             'mensajes_sin_leer' => Mensaje::where('leido', false)->count(),
         ];
 
         $welcomeSlides = \App\Models\WelcomeSlide::orderBy('orden', 'asc')->get();
+        $activeTab = $this->resolveAdminTab($request->query('tab'));
 
         // Enviamos todos los datos juntos en un combo a la vista del panel
-        return view('admin.dashboard', compact('productos', 'categorias', 'pedidos', 'usuarios', 'mensajes', 'totales', 'paginaContenidos', 'welcomeSlides'));
+        return view('admin.dashboard', compact('productos', 'categorias', 'pedidos', 'usuarios', 'mensajes', 'totales', 'paginaContenidos', 'welcomeSlides', 'roles', 'roleFilter', 'activeTab'));
     }
 
     /**
@@ -95,24 +122,83 @@ class AdminController extends Controller
     }
 
     /**
-     * Permite al admin crear nuevos usuarios cliente desde el panel.
+     * Permite al admin crear nuevos usuarios desde el panel.
      */
     public function storeUsuario(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8|confirmed',
+        $validated = $this->validateUsuario($request);
+
+        User::create($this->buildUsuarioPayload($validated));
+
+        return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+            ->with('success', 'Usuario creado correctamente desde el panel.');
+    }
+
+    /**
+     * Actualiza los datos básicos o la contraseña de un usuario.
+     */
+    public function updateUsuario(Request $request, User $usuario)
+    {
+        $validated = $this->validateUsuario($request, $usuario);
+
+        if ($usuario->is(auth()->user()) && $validated['role'] !== User::ROLE_ADMIN) {
+            return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+                ->withErrors(['role' => 'No podés quitarte el rol de administrador desde esta pantalla.']);
+        }
+
+        if ($this->wouldRemoveLastAdmin($usuario, $validated['role'])) {
+            return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+                ->withErrors(['role' => 'Debe existir al menos un administrador activo en el sistema.']);
+        }
+
+        $usuario->update($this->buildUsuarioPayload($validated));
+
+        return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+            ->with('success', 'Usuario actualizado correctamente.');
+    }
+
+    /**
+     * Genera una contraseña temporal para un usuario concreto.
+     */
+    public function resetPasswordUsuario(Request $request, User $usuario)
+    {
+        $passwordTemporal = Str::random(12);
+
+        $usuario->update([
+            'password' => $passwordTemporal,
         ]);
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-            'role' => 'client',
-        ]);
+        return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+            ->with('success', 'Contraseña reseteada correctamente.')
+            ->with('generated_password', [
+                'name' => $usuario->name,
+                'email' => $usuario->email,
+                'password' => $passwordTemporal,
+            ]);
+    }
 
-        return redirect()->route('admin.index')->with('success', 'Cliente creado correctamente desde el panel.');
+    /**
+     * Elimina usuarios por soft delete desde el panel.
+     */
+    public function destroyUsuario(Request $request, User $usuario)
+    {
+        if ($usuario->is(auth()->user())) {
+            return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+                ->withErrors(['delete' => 'No podés eliminar tu propio usuario desde el panel.']);
+        }
+
+        if ($this->wouldRemoveLastAdmin($usuario)) {
+            return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+                ->withErrors(['delete' => 'Debe existir al menos un administrador activo en el sistema.']);
+        }
+
+        DB::transaction(function () use ($usuario) {
+            $usuario->preserveEmailForSoftDelete();
+            $usuario->delete();
+        });
+
+        return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+            ->with('success', 'Usuario eliminado correctamente.');
     }
 
     /**
@@ -239,5 +325,81 @@ class AdminController extends Controller
         }
 
         return redirect()->back()->with('success', 'El logo ya está en su modo por defecto.');
+    }
+
+    private function validateUsuario(Request $request, ?User $usuario = null): array
+    {
+        $passwordRules = $usuario
+            ? ['nullable', 'string', 'min:8', 'confirmed']
+            : ['required', 'string', 'min:8', 'confirmed'];
+
+        return $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')
+                    ->ignore($usuario?->id)
+                    ->where(fn ($query) => $query->whereNull('deleted_at')),
+            ],
+                    'role' => ['required', Rule::in(array_keys(Role::options()))],
+            'password' => $passwordRules,
+        ]);
+    }
+
+    private function buildUsuarioPayload(array $validated): array
+    {
+        $payload = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $validated['role'],
+        ];
+
+        if (! empty($validated['password'])) {
+            $payload['password'] = $validated['password'];
+        }
+
+        return $payload;
+    }
+
+    private function dashboardRedirectParams(Request $request): array
+    {
+        $params = ['tab' => 'usuarios'];
+        $roleFilter = $request->input('role_filter', $request->query('rol', 'todos'));
+        $filtrosPermitidos = array_merge(['todos'], array_keys(Role::options()));
+
+        if (in_array($roleFilter, $filtrosPermitidos, true)) {
+            $params['rol'] = $roleFilter;
+        }
+
+        return $params;
+    }
+
+    private function wouldRemoveLastAdmin(User $usuario, ?string $newRole = null): bool
+    {
+        if (! $usuario->isAdmin()) {
+            return false;
+        }
+
+        if ($newRole === User::ROLE_ADMIN) {
+            return false;
+        }
+
+        $adminRoleId = Role::idForSlug(User::ROLE_ADMIN);
+
+        if (! $adminRoleId) {
+            return false;
+        }
+
+        return User::where('role_id', $adminRoleId)->count() <= 1;
+    }
+
+    private function resolveAdminTab(?string $tab): string
+    {
+        $tabs = ['productos', 'compras', 'mensajes', 'usuarios', 'paginas', 'carrusel'];
+
+        return in_array($tab, $tabs, true) ? $tab : 'productos';
     }
 }

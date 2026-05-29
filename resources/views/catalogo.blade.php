@@ -115,7 +115,7 @@
                 <p class="text-muted mb-0">Todos los productos disponibles en ENERGY con sus categorías y precios actualizados.</p>
             </div>
             @auth
-                @if(auth()->user()->role === 'admin')
+                @if(auth()->user()->isAdmin())
                     <a href="{{ route('admin.index') }}" class="btn btn-danger rounded-pill px-4 fw-bold">Ir al Panel</a>
                 @endif
             @endauth

@@ -13,9 +13,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // AGREGADO: Crea la columna 'role' tipo string, por defecto es 'client'
+            // AGREGADO: Crea la columna 'role' tipo string, por defecto es 'cliente'
             // 'after' hace que en la tabla de MariaDB quede ordenada justo después de la contraseña
-            $table->string('role')->default('client')->after('password');
+            $table->string('role')->default('cliente')->after('password');
         });
     }
 

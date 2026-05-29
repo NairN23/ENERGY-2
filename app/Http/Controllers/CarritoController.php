@@ -193,7 +193,7 @@ class CarritoController extends Controller
     public function misCompras()
     {
         // El administrador no debe ver "mis compras", redirige al panel administrativo
-        if (auth()->user()->role === 'admin') {
+        if (auth()->user()->isAdmin()) {
             return redirect()->route('admin.index')->with('error', 'Los administradores no acceden a la sección de compras de clientes.');
         }
 
