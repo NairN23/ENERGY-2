@@ -15,6 +15,9 @@
         .status-badge { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; padding: 6px 12px; border-radius: 20px; }
         .bg-pending { background-color: #ffe8cc; color: #d97706; }
         .bg-confirmed { background-color: #dcfce7; color: #15803d; }
+        .bg-cancelado { background-color: #fee2e2; color: #b91c1c; }
+        .bg-enviado { background-color: #dbeafe; color: #1d4ed8; }
+        .bg-entregado { background-color: #f3e8ff; color: #6b21a8; }
         .product-thumb { width: 50px; height: 50px; object-fit: contain; background: #f8f9fa; border-radius: 8px; padding: 4px; }
     </style>
 </head>
@@ -36,6 +39,34 @@
                 <i class="bi bi-check-circle-fill me-2"></i> <strong>{{ session('success') }}</strong>
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
+            <script>
+                localStorage.removeItem('energy_cart');
+                if (typeof syncCartBadge === 'function') {
+                    syncCartBadge();
+                }
+            </script>
+        @endif
+
+        @if(session('whatsapp_order_id'))
+            @php
+                $wpPedido = \App\Models\Pedido::with('detalles.producto')->find(session('whatsapp_order_id'));
+            @endphp
+            @if($wpPedido)
+                <div class="alert alert-success border-0 shadow-sm p-4 mb-4" style="border-radius: 20px; background-color: #e8f5e9;">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="bi bi-whatsapp text-success fs-1"></i>
+                        <div>
+                            <h5 class="fw-bold text-success text-uppercase">¡Pedido #{{ $wpPedido->id }} Registrado con Éxito!</h5>
+                            <p class="text-dark small mb-3">
+                                Tu pedido ha sido guardado en nuestro sistema. Para finalizar el proceso, debes enviar los detalles por WhatsApp haciendo clic en el botón de abajo (se intentará abrir automáticamente en 1 segundo):
+                            </p>
+                            <a href="#" onclick="enviarWhatsappPedido({{ $wpPedido->id }}, '{{ rawurlencode($wpPedido->cliente_nombre) }}', {{ $wpPedido->total }}, '{{ rawurlencode($wpPedido->detalles->map(function($d) { return "- " . ($d->producto->nombre ?? 'Producto') . " (" . $d->cantidad . "x $" . number_format($d->precio_unitario, 0, '', '') . ")"; })->implode("\n")) }}')" class="btn btn-success fw-bold px-4 py-2 text-uppercase rounded-pill shadow-sm" id="btnEnviarWA">
+                                <i class="bi bi-whatsapp me-2"></i> Enviar Detalles por WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endif
         @endif
 
         @forelse($pedidos as $pedido)
@@ -46,10 +77,31 @@
                         <h5 class="fw-bold mb-0">#{{ $pedido->id }} <span class="text-muted" style="font-size: 0.8rem; font-weight: normal;">- {{ $pedido->created_at->format('d/m/Y H:i') }}</span></h5>
                     </div>
                     <div class="col-md-6 col-12 text-md-end">
-                        <span class="status-badge {{ $pedido->estado === 'confirmado' ? 'bg-confirmed' : 'bg-pending' }}">
-                            <i class="bi {{ $pedido->estado === 'confirmado' ? 'bi-check-circle-fill' : 'bi-clock-fill' }} me-1"></i>
-                            {{ $pedido->estado === 'confirmado' ? 'Pago Aprobado' : 'Pendiente de Aprobación' }}
+                        <span class="status-badge {{ $pedido->estado === 'confirmado' ? 'bg-confirmed' : ($pedido->estado === 'cancelado' ? 'bg-cancelado' : ($pedido->estado === 'enviado' ? 'bg-enviado' : ($pedido->estado === 'entregado' ? 'bg-entregado' : 'bg-pending'))) }}">
+                            <i class="bi {{ $pedido->estado === 'confirmado' ? 'bi-check-circle-fill' : ($pedido->estado === 'cancelado' ? 'bi-x-circle-fill' : ($pedido->estado === 'enviado' ? 'bi-truck' : ($pedido->estado === 'entregado' ? 'bi-house-check-fill' : 'bi-clock-fill'))) }} me-1"></i>
+                            @if($pedido->estado === 'confirmado')
+                                Pago Aprobado
+                            @elseif($pedido->estado === 'cancelado')
+                                Pedido Cancelado
+                            @elseif($pedido->estado === 'enviado')
+                                Enviado
+                            @elseif($pedido->estado === 'entregado')
+                                Entregado
+                            @else
+                                Pendiente de Aprobación
+                            @endif
                         </span>
+                        
+                        @if($pedido->estado === 'pendiente')
+                            <div class="mt-2">
+                                <form action="{{ route('pedidos.cancelar', $pedido->id) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas cancelar este pedido? El stock de los productos será restablecido.');" style="display:inline-block;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-xs btn-outline-danger rounded-pill px-3 py-1 fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+                                        <i class="bi bi-x-circle-fill me-1"></i> Cancelar Pedido
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -77,6 +129,14 @@
                                                     <div>
                                                         <span class="fw-bold d-block text-uppercase" style="font-size: 0.8rem;">{{ $detalle->producto->nombre ?? 'Producto Descatalogado' }}</span>
                                                         <span class="text-muted small" style="font-size: 0.72rem;">{{ $detalle->producto->categoria->nombre ?? 'Suplemento' }}</span>
+                                                        @if($detalle->producto && $detalle->producto->es_combo && $detalle->producto->productos_combo_collection->count() > 0)
+                                                            <div class="mt-1" style="font-size: 0.68rem; line-height: 1.2;">
+                                                                <span class="text-danger fw-bold text-uppercase" style="font-size: 0.62rem;">Incluye:</span>
+                                                                @foreach($detalle->producto->productos_combo_collection as $comp)
+                                                                    <div class="text-muted"><i class="bi bi-caret-right text-danger"></i> {{ $comp->nombre }}</div>
+                                                                @endforeach
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                 </div>
                                             </td>
@@ -105,6 +165,8 @@
                                 @if($pedido->metodo_pago === 'mercado_pago')
                                     <span class="badge bg-info text-white">Mercado Pago</span>
                                     <span class="d-block text-muted small mt-1" style="font-size: 0.65rem;">Ref: #{{ $pedido->mp_payment_id }}</span>
+                                @elseif($pedido->metodo_pago === 'whatsapp')
+                                    <span class="badge bg-success text-white"><i class="bi bi-whatsapp me-1"></i> Coordinar por WhatsApp</span>
                                 @else
                                     <span class="badge bg-primary text-white">Transferencia Bancaria</span>
                                     @if($pedido->comprobante)
@@ -138,5 +200,35 @@
     @include('partials.footer')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function enviarWhatsappPedido(id, nombre, total, detalles) {
+            const telefono = "543794576548";
+            
+            // Decodificar los parámetros de Blade
+            const decNombre = decodeURIComponent(nombre);
+            const decDetalles = decodeURIComponent(detalles);
+            
+            let mensaje = `¡Hola ENERGY! ⚡ Acabo de realizar el pedido *#${id}* a nombre de *${decNombre}*.\n\n`;
+            mensaje += `*Detalle:*\n${decDetalles}\n\n`;
+            mensaje += `*Total a pagar:* $${total.toLocaleString('es-AR')}\n\n`;
+            mensaje += `---\n`;
+            mensaje += `*Pasos para finalizar la compra:*\n`;
+            mensaje += `1. Abonar la totalidad de $${total.toLocaleString('es-AR')} a su CBU (Galicia CBU: 0070089020000012345678, Alias: ENERGY.NUTRICION.MP).\n`;
+            mensaje += `2. Enviar el comprobante de transferencia a este número de WhatsApp.\n\n`;
+            mensaje += `¡Muchas gracias por elegirnos! Su pedido será aprobado a la brevedad.`;
+            
+            const encodedMsg = encodeURIComponent(mensaje);
+            window.open(`https://wa.me/${telefono}?text=${encodedMsg}`, '_blank');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnWp = document.getElementById('btnEnviarWA');
+            if (btnWp) {
+                setTimeout(() => {
+                    btnWp.click();
+                }, 1000);
+            }
+        });
+    </script>
 </body>
 </html>

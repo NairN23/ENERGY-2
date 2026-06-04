@@ -87,16 +87,6 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Mensaje marcado como leído.');
     }
 
-    /**
-     * Eliminar un mensaje
-     */
-    public function deleteMensaje($id)
-    {
-        $mensaje = Mensaje::findOrFail($id);
-        $mensaje->delete();
-
-        return redirect()->back()->with('success', 'Mensaje eliminado correctamente.');
-    }
 
     /**
      * Permite al admin actualizar textos de las páginas informativas en caliente
@@ -106,6 +96,12 @@ class AdminController extends Controller
         $request->validate([
             'pagina' => 'required|string',
         ]);
+
+        foreach ($request->except(['_token', 'pagina']) as $clave => $valor) {
+            $request->validate([
+                $clave => 'nullable|string|max:1000'
+            ]);
+        }
 
         foreach ($request->except(['_token', 'pagina']) as $clave => $valor) {
             \App\Models\PaginaContenido::updateOrCreate(
@@ -226,13 +222,28 @@ class AdminController extends Controller
     }
 
     /**
+     * Incrementar o decrementar stock de un producto directamente
+     */
+    public function updateStock(Request $request, $id)
+    {
+        $producto = Producto::findOrFail($id);
+        $action = $request->input('action');
+        if ($action === 'increment') {
+            $producto->increment('stock', 1);
+        } elseif ($action === 'decrement' && $producto->stock > 0) {
+            $producto->decrement('stock', 1);
+        }
+        return redirect()->back()->with('success', "Stock de '{$producto->nombre}' actualizado con éxito.");
+    }
+
+    /**
      * Guarda o edita un slide del carrusel de inicio
      */
     public function storeSlide(Request $request)
     {
         $request->validate([
             'imagen_file' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:4096',
-            'imagen_url' => 'nullable|string|max:500',
+            'imagen_url' => 'nullable|url|max:500',
             'titulo_blanco' => 'required|string|max:255',
             'titulo_rojo' => 'required|string|max:255',
             'orden' => 'required|integer',
@@ -334,17 +345,17 @@ class AdminController extends Controller
             : ['required', 'string', 'min:8', 'confirmed'];
 
         return $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'min:3', 'max:255'],
             'email' => [
                 'required',
                 'string',
-                'email',
+                'email:rfc,dns',
                 'max:255',
                 Rule::unique('users', 'email')
                     ->ignore($usuario?->id)
                     ->where(fn ($query) => $query->whereNull('deleted_at')),
             ],
-                    'role' => ['required', Rule::in(array_keys(Role::options()))],
+            'role' => ['required', Rule::in(array_keys(Role::options()))],
             'password' => $passwordRules,
         ]);
     }

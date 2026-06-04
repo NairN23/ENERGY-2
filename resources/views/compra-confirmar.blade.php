@@ -48,6 +48,34 @@
                         <!-- Datos de Envío -->
                         <h5 class="fw-bold mb-3 text-uppercase"><i class="bi bi-geo-alt me-2 text-danger"></i>Datos de Envío</h5>
                         
+                        @auth
+                            @php
+                                $direccionesGuardadas = auth()->user()->direcciones ?? collect();
+                            @endphp
+                            @if($direccionesGuardadas->count() > 0)
+                                <div class="mb-3 p-3 bg-light rounded-3 border">
+                                    <label for="direccion_guardada_id" class="form-label small fw-bold text-muted text-uppercase">Direcciones Guardadas</label>
+                                    <div class="d-flex gap-2">
+                                        <select id="direccion_guardada_id" class="form-select form-select-sm" style="border-radius: 10px;" onchange="cargarDireccionGuardada()">
+                                            <option value="">-- Seleccionar una dirección guardada --</option>
+                                            @foreach($direccionesGuardadas as $dir)
+                                                <option value="{{ $dir->id }}" 
+                                                        data-nombre="{{ $dir->cliente_nombre }}" 
+                                                        data-telefono="{{ $dir->cliente_telefono }}" 
+                                                        data-email="{{ $dir->cliente_email }}" 
+                                                        data-direccion="{{ $dir->direccion_entrega }}">
+                                                    {{ $dir->direccion_entrega }} (Tel: {{ $dir->cliente_telefono }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarDireccionGuardada()" title="Eliminar dirección" style="border-radius: 10px;">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            @endif
+                        @endauth
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="cliente_nombre" class="form-label small fw-bold text-muted">Nombre Completo</label>
@@ -84,10 +112,17 @@
                                 </label>
                             </div>
                             
-                            <div class="form-check form-check-inline p-3 border rounded-3 w-100" style="cursor: pointer;" onclick="seleccionarMetodo('mercado_pago')">
+                            <div class="form-check form-check-inline p-3 border rounded-3 w-100 mb-2" style="cursor: pointer;" onclick="seleccionarMetodo('mercado_pago')">
                                 <input class="form-check-input ms-1" type="radio" name="metodo_pago" id="pago_mp" value="mercado_pago">
                                 <label class="form-check-label fw-bold ms-2" for="pago_mp">
                                     <i class="bi bi-wallet-fill text-info me-2"></i> Mercado Pago (Pago inmediato)
+                                </label>
+                            </div>
+
+                            <div class="form-check form-check-inline p-3 border rounded-3 w-100" style="cursor: pointer;" onclick="seleccionarMetodo('whatsapp')">
+                                <input class="form-check-input ms-1" type="radio" name="metodo_pago" id="pago_whatsapp" value="whatsapp">
+                                <label class="form-check-label fw-bold ms-2" for="pago_whatsapp">
+                                    <i class="bi bi-whatsapp text-success me-2"></i> Finalizar por WhatsApp (Coordinar envío)
                                 </label>
                             </div>
                         </div>
@@ -102,9 +137,9 @@
                                 <strong>Titular:</strong> ENERGY SRL
                             </div>
                             
-                            <label for="comprobante" class="form-label small fw-bold text-danger"><i class="bi bi-upload me-1"></i> Subir Comprobante de Pago</label>
-                            <input type="file" name="comprobante" id="comprobante" class="form-control" accept="image/*,application/pdf">
-                            <span class="text-muted small d-block mt-1" style="font-size: 0.72rem;">Sube una foto o PDF del comprobante para agilizar la aprobación del pedido.</span>
+                            <label for="comprobante" class="form-label small fw-bold text-danger"><i class="bi bi-upload me-1"></i> Subir Comprobante de Pago (Únicamente PDF)</label>
+                            <input type="file" name="comprobante" id="comprobante" class="form-control" accept="application/pdf">
+                            <span class="text-muted small d-block mt-1" style="font-size: 0.72rem;">Sube el archivo PDF del comprobante para agilizar la aprobación del pedido.</span>
                         </div>
 
                         <!-- Detalles Mercado Pago -->
@@ -118,6 +153,11 @@
                             <div id="mpSuccessMsg" class="mt-3 text-success fw-bold d-none">
                                 <i class="bi bi-check-circle-fill me-1"></i> Pago aprobado por Mercado Pago. Ref: #<span id="mpRefId"></span>
                             </div>
+                        </div>
+
+                        <!-- Detalles WhatsApp -->
+                        <div class="alert alert-success border-0 py-3 mb-4 mt-3" id="whatsappDetailsBox" style="border-radius: 10px; display: none;">
+                            <i class="bi bi-whatsapp me-2 fs-5"></i> Al finalizar el pedido, serás redirigido a WhatsApp para enviar el comprobante y coordinar de forma personalizada.
                         </div>
 
                         <!-- Datos Ocultos del Carrito -->
@@ -209,6 +249,51 @@
     <script>
         let cartTotal = 0;
 
+        function cargarDireccionGuardada() {
+            const select = document.getElementById('direccion_guardada_id');
+            if (!select) return;
+            const option = select.options[select.selectedIndex];
+            if (!option || !option.value) return;
+
+            document.getElementById('cliente_nombre').value = option.getAttribute('data-nombre') || '';
+            document.getElementById('cliente_telefono').value = option.getAttribute('data-telefono') || '';
+            document.getElementById('cliente_email').value = option.getAttribute('data-email') || '';
+            document.getElementById('direccion_entrega').value = option.getAttribute('data-direccion') || '';
+        }
+
+        function eliminarDireccionGuardada() {
+            const select = document.getElementById('direccion_guardada_id');
+            if (!select) return;
+            const id = select.value;
+            if (!id) {
+                alert('Por favor selecciona una dirección guardada para eliminar.');
+                return;
+            }
+
+            if (confirm('¿Seguro deseas eliminar esta dirección guardada?')) {
+                fetch(`/direcciones/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message || 'Dirección eliminada correctamente.');
+                        location.reload();
+                    } else {
+                        alert('Error al eliminar la dirección.');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Error en la solicitud.');
+                });
+            }
+        }
+
         function renderCheckoutCart() {
             const cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
             const container = document.getElementById('checkout-items-list');
@@ -229,14 +314,16 @@
 
             cart.forEach(item => {
                 const price = parseFloat(item.price);
-                cartTotal += price;
+                const qty = parseInt(item.cantidad || 1);
+                const itemSubtotal = price * qty;
+                cartTotal += itemSubtotal;
                 html += `
                 <div class="product-item d-flex justify-content-between align-items-center">
                     <div>
                         <h6 class="mb-0 fw-bold text-uppercase" style="font-size: 0.8rem;">${item.name}</h6>
-                        <span class="text-white-50" style="font-size: 0.72rem;">1 x $${price.toLocaleString()}</span>
+                        <span class="text-white-50" style="font-size: 0.72rem;">${qty} x $${price.toLocaleString()}</span>
                     </div>
-                    <span class="fw-bold">$${price.toLocaleString()}</span>
+                    <span class="fw-bold">$${itemSubtotal.toLocaleString()}</span>
                 </div>
                 `;
             });
@@ -259,19 +346,36 @@
         function seleccionarMetodo(metodo) {
             const radioTransfer = document.getElementById('pago_transferencia');
             const radioMP = document.getElementById('pago_mp');
+            const radioWA = document.getElementById('pago_whatsapp');
+            
             const bankBox = document.getElementById('bankDetailsBox');
             const mpBox = document.getElementById('mpDetailsBox');
+            const waBox = document.getElementById('whatsappDetailsBox');
             const inputComprobante = document.getElementById('comprobante');
 
             if (metodo === 'transferencia') {
                 radioTransfer.checked = true;
+                if(radioMP) radioMP.checked = false;
+                if(radioWA) radioWA.checked = false;
                 bankBox.style.display = 'block';
                 mpBox.style.display = 'none';
+                if(waBox) waBox.style.display = 'none';
                 inputComprobante.required = true;
-            } else {
+            } else if (metodo === 'mercado_pago') {
+                if(radioTransfer) radioTransfer.checked = false;
                 radioMP.checked = true;
+                if(radioWA) radioWA.checked = false;
                 bankBox.style.display = 'none';
                 mpBox.style.display = 'block';
+                if(waBox) waBox.style.display = 'none';
+                inputComprobante.required = false;
+            } else if (metodo === 'whatsapp') {
+                if(radioTransfer) radioTransfer.checked = false;
+                if(radioMP) radioMP.checked = false;
+                radioWA.checked = true;
+                bankBox.style.display = 'none';
+                mpBox.style.display = 'none';
+                if(waBox) waBox.style.display = 'block';
                 inputComprobante.required = false;
             }
 
@@ -316,14 +420,32 @@
                 return;
             }
 
-            // Si es exitoso, vaciamos el carrito del navegador al enviar
-            setTimeout(() => {
-                localStorage.removeItem('energy_cart');
-            }, 100);
+            const isTransfer = document.getElementById('pago_transferencia').checked;
+            if (isTransfer) {
+                const fileInput = document.getElementById('comprobante');
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                        e.preventDefault();
+                        alert('Error: El comprobante de transferencia debe ser un archivo en formato PDF únicamente.');
+                        return;
+                    }
+                }
+            }
         });
 
         document.addEventListener('DOMContentLoaded', () => {
             renderCheckoutCart();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const metodo = urlParams.get('metodo');
+            if (metodo === 'whatsapp') {
+                seleccionarMetodo('whatsapp');
+            } else if (metodo === 'mercado_pago') {
+                seleccionarMetodo('mercado_pago');
+            } else {
+                seleccionarMetodo('transferencia');
+            }
         });
     </script>
 </body>

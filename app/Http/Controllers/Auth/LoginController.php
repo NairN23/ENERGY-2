@@ -64,18 +64,38 @@ class LoginController extends Controller
                     Carrito::where('user_id', $user->id)->delete();
                 }
 
-                // Barremos cada ítem para registrarlo en la tabla
+                // Agrupamos por producto_id para evitar duplicados y consolidar cantidades en MariaDB
+                $aggregatedItems = [];
                 foreach ($productosArray as $item) {
-                    // Cruzamos el nombre del localStorage con la tabla de productos para obtener su id real
-                    $producto = Producto::where('nombre', $item['name'])->first();
+                    $producto = null;
+                    if (isset($item['id'])) {
+                        $producto = Producto::find($item['id']);
+                    }
+                    if (!$producto) {
+                        $producto = Producto::where('nombre', $item['name'] ?? '')->first();
+                    }
 
                     if ($producto) {
-                        Carrito::create([
-                            'user_id'     => $user->id,
-                            'producto_id' => $producto->id,
-                            'cantidad'    => 1, // Por defecto se guarda una unidad
-                        ]);
+                        $id = $producto->id;
+                        $cantidad = intval($item['cantidad'] ?? 1);
+                        if (isset($aggregatedItems[$id])) {
+                            $aggregatedItems[$id]['cantidad'] += $cantidad;
+                        } else {
+                            $aggregatedItems[$id] = [
+                                'producto_id' => $id,
+                                'cantidad'    => $cantidad,
+                            ];
+                        }
                     }
+                }
+
+                // Barremos cada ítem unificado para registrarlo en la tabla
+                foreach ($aggregatedItems as $aggItem) {
+                    Carrito::create([
+                        'user_id'     => $user->id,
+                        'producto_id' => $aggItem['producto_id'],
+                        'cantidad'    => $aggItem['cantidad'],
+                    ]);
                 }
             }
         }

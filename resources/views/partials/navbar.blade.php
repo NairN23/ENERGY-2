@@ -263,6 +263,8 @@
                             'id'    => $item->producto->id,
                             'name'  => $item->producto->nombre,
                             'price' => $item->producto->precio,
+                            'cantidad' => $item->cantidad,
+                            'stock' => $item->producto->stock,
                         ];
                     }
                     return null;
@@ -275,9 +277,12 @@
                 let localCart = JSON.parse(localStorage.getItem('energy_cart')) || [];
                 
                 dbCart.forEach(dbItem => {
-                    const exists = localCart.some(localItem => localItem.id === dbItem.id);
-                    if (!exists) {
+                    const localItemIndex = localCart.findIndex(localItem => localItem.id === dbItem.id);
+                    if (localItemIndex === -1) {
                         localCart.push(dbItem);
+                    } else {
+                        localCart[localItemIndex].cantidad = dbItem.cantidad;
+                        localCart[localItemIndex].stock = dbItem.stock;
                     }
                 });
                 
@@ -287,7 +292,7 @@
 
         if (badge) {
             const cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
-            const totalItems = cart.length;
+            const totalItems = cart.reduce((acc, item) => acc + parseInt(item.cantidad || 1), 0);
             
             badge.innerText = totalItems;
             

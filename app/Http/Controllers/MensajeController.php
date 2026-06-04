@@ -13,10 +13,10 @@ class MensajeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'telefono' => 'nullable|string|max:20',
-            'asunto' => 'nullable|string|max:255',
+            'nombre' => auth()->check() ? 'nullable|string|max:255' : 'required|string|max:255',
+            'email' => auth()->check() ? 'nullable|email|max:255' : 'required|email|max:255',
+            'telefono' => auth()->check() ? 'nullable|string|max:20' : 'required|string|max:20',
+            'asunto' => 'required|string|max:255',
             'contenido' => 'required|string',
         ]);
 

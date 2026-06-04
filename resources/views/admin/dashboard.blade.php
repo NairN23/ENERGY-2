@@ -111,6 +111,7 @@
                                             <th>Nombre</th>
                                             <th>Categoría</th>
                                             <th>Precio</th>
+                                            <th>Stock</th>
                                             <th>Combo</th>
                                             <th>Destacado</th>
                                             <th class="text-end">Acciones</th>
@@ -123,6 +124,23 @@
                                                 <td class="fw-bold text-dark" style="font-size: 0.88rem;">{{ $prod->nombre }}</td>
                                                 <td><span class="badge bg-light text-danger border text-uppercase" style="font-size: 0.65rem;">{{ $prod->categoria->nombre ?? 'General' }}</span></td>
                                                 <td class="fw-bold">${{ number_format($prod->precio, 0, ',', '.') }}</td>
+                                                <td>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        <form action="{{ route('admin.productos.stock', $prod->id) }}" method="POST" style="display:inline-block;">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="action" value="decrement">
+                                                            <button type="submit" class="btn btn-xs btn-outline-secondary p-0" style="width: 20px; height: 20px; font-size: 0.72rem; line-height: 1; border-radius: 4px;" {{ $prod->stock <= 0 ? 'disabled' : '' }}>-</button>
+                                                        </form>
+                                                        <span class="fw-bold text-dark" style="min-width: 24px; text-align: center; font-size: 0.85rem;">{{ $prod->stock }}</span>
+                                                        <form action="{{ route('admin.productos.stock', $prod->id) }}" method="POST" style="display:inline-block;">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <input type="hidden" name="action" value="increment">
+                                                            <button type="submit" class="btn btn-xs btn-outline-secondary p-0" style="width: 20px; height: 20px; font-size: 0.72rem; line-height: 1; border-radius: 4px;">+</button>
+                                                        </form>
+                                                    </div>
+                                                </td>
                                                 <td>
                                                     @if($prod->es_combo)
                                                         <span class="badge bg-info">Sí</span>
@@ -250,13 +268,6 @@
                                                             </button>
                                                         </form>
                                                     @endif
-                                                    <form action="{{ route('admin.mensajes.delete', $msj->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Está seguro?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                                            <i class="bi bi-trash"></i>
-                                                        </button>
-                                                    </form>
                                                 </td>
                                             </tr>
                                         @empty
@@ -311,11 +322,11 @@
                                     <div class="row g-3">
                                         <div class="col-lg-3 col-md-6">
                                             <label class="form-label small text-uppercase text-muted">Nombre</label>
-                                            <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
+                                            <input type="text" name="name" class="form-control" value="{{ old('name') }}" minlength="3" maxlength="255" required>
                                         </div>
                                         <div class="col-lg-3 col-md-6">
                                             <label class="form-label small text-uppercase text-muted">Email</label>
-                                            <input type="email" name="email" class="form-control" value="{{ old('email') }}" required>
+                                            <input type="email" name="email" class="form-control" value="{{ old('email') }}" maxlength="255" required>
                                         </div>
                                         <div class="col-lg-2 col-md-6">
                                             <label class="form-label small text-uppercase text-muted">Rol</label>
@@ -376,26 +387,30 @@
                                                 </td>
                                                 <td class="small">{{ $user->created_at->format('d/m/Y') }}</td>
                                                 <td class="text-end">
-                                                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
-                                                        <button type="button" class="btn btn-sm btn-outline-dark px-3" style="border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#editarUsuarioModal{{ $user->id }}">
-                                                            Editar
-                                                        </button>
-                                                        <form action="{{ route('admin.usuarios.reset-password', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;">
-                                                            @csrf
-                                                            <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
-                                                            <button type="submit" class="btn btn-sm btn-outline-warning" style="border-radius: 8px;" onclick="return confirm('¿Generar una nueva contraseña temporal para {{ $user->name }}?');">
-                                                                Resetear clave
+                                                    @if($user->isAdmin())
+                                                        <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                                                            <button type="button" class="btn btn-sm btn-outline-dark px-3" style="border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#editarUsuarioModal{{ $user->id }}">
+                                                                Editar
                                                             </button>
-                                                        </form>
-                                                        <form action="{{ route('admin.usuarios.destroy', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro querés eliminar a este usuario?');">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px;" {{ $user->id === auth()->id() ? 'disabled' : '' }}>
-                                                                Eliminar
-                                                            </button>
-                                                        </form>
-                                                    </div>
+                                                            <form action="{{ route('admin.usuarios.reset-password', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;">
+                                                                @csrf
+                                                                <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
+                                                                <button type="submit" class="btn btn-sm btn-outline-warning" style="border-radius: 8px;" onclick="return confirm('¿Generar una nueva contraseña temporal para {{ $user->name }}?');">
+                                                                    Resetear clave
+                                                                </button>
+                                                            </form>
+                                                            <form action="{{ route('admin.usuarios.destroy', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro querés eliminar a este usuario?');">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
+                                                                <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px;" {{ $user->id === auth()->id() ? 'disabled' : '' }}>
+                                                                    Eliminar
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    @else
+                                                        <span class="text-muted small italic"><i class="bi bi-shield-lock me-1"></i>Sin acciones</span>
+                                                    @endif
                                                 </td>
                                             </tr>
 
@@ -417,11 +432,11 @@
                                                                 <div class="row g-3">
                                                                     <div class="col-md-6">
                                                                         <label class="form-label small text-uppercase text-muted">Nombre</label>
-                                                                        <input type="text" name="name" class="form-control" value="{{ $user->name }}" required>
+                                                                        <input type="text" name="name" class="form-control" value="{{ $user->name }}" minlength="3" maxlength="255" required>
                                                                     </div>
                                                                     <div class="col-md-6">
                                                                         <label class="form-label small text-uppercase text-muted">Email</label>
-                                                                        <input type="email" name="email" class="form-control" value="{{ $user->email }}" required>
+                                                                        <input type="email" name="email" class="form-control" value="{{ $user->email }}" maxlength="255" required>
                                                                     </div>
                                                                     <div class="col-md-4">
                                                                         <label class="form-label small text-uppercase text-muted">Rol</label>
@@ -465,10 +480,7 @@
                         <div class="row g-4">
                             <div class="col-md-3">
                                 <div class="list-group shadow-sm" id="paginasListGroup" role="tablist" style="border-radius: 12px; overflow: hidden; border: 1px solid #eee;">
-                                    <button class="list-group-item list-group-item-action active text-uppercase fw-bold p-3 border-0" id="list-inicio-list" data-bs-toggle="list" href="#list-inicio" role="tab">
-                                        <i class="bi bi-house-door me-2"></i> Inicio
-                                    </button>
-                                    <button class="list-group-item list-group-item-action text-uppercase fw-bold p-3 border-0" id="list-quienes-list" data-bs-toggle="list" href="#list-quienes" role="tab">
+                                    <button class="list-group-item list-group-item-action active text-uppercase fw-bold p-3 border-0" id="list-quienes-list" data-bs-toggle="list" href="#list-quienes" role="tab">
                                         <i class="bi bi-people-fill me-2"></i> Quiénes Somos
                                     </button>
                                     <button class="list-group-item list-group-item-action text-uppercase fw-bold p-3 border-0" id="list-comercio-list" data-bs-toggle="list" href="#list-comercio" role="tab">
@@ -483,30 +495,8 @@
                             <div class="col-md-9">
                                 <div class="tab-content" id="nav-tabContent">
                                     
-                                    <!-- Editar Inicio -->
-                                    <div class="tab-pane fade show active" id="list-inicio" role="tabpanel">
-                                        <div class="dashboard-card shadow-sm">
-                                            <h5 class="fw-bold mb-3 text-uppercase border-bottom pb-2">Contenido de la Página de Inicio</h5>
-                                            <form action="/admin/paginas/guardar" method="POST">
-                                                @csrf
-                                                <input type="hidden" name="pagina" value="welcome">
-                                                
-                                                @foreach($paginaContenidos->get('welcome', []) as $cont)
-                                                    <div class="mb-3">
-                                                        <label class="form-label small fw-bold text-uppercase text-muted">{{ $cont->titulo }}</label>
-                                                        <input type="text" name="{{ $cont->clave }}" class="form-control" value="{{ $cont->valor }}" style="border-radius: 10px;" required>
-                                                    </div>
-                                                @endforeach
-                                                
-                                                <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold text-uppercase mt-2">
-                                                    Guardar Cambios Inicio
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                    
                                     <!-- Editar Quiénes Somos -->
-                                    <div class="tab-pane fade" id="list-quienes" role="tabpanel">
+                                    <div class="tab-pane fade show active" id="list-quienes" role="tabpanel">
                                         <div class="dashboard-card shadow-sm">
                                             <h5 class="fw-bold mb-3 text-uppercase border-bottom pb-2">Contenido de Quiénes Somos</h5>
                                             <form action="/admin/paginas/guardar" method="POST">
@@ -517,9 +507,9 @@
                                                     <div class="mb-3">
                                                         <label class="form-label small fw-bold text-uppercase text-muted">{{ $cont->titulo }}</label>
                                                         @if(strlen($cont->valor) > 100)
-                                                            <textarea name="{{ $cont->clave }}" class="form-control" rows="4" style="border-radius: 10px;" required>{{ $cont->valor }}</textarea>
+                                                            <textarea name="{{ $cont->clave }}" class="form-control" rows="4" style="border-radius: 10px;" maxlength="1000" required>{{ $cont->valor }}</textarea>
                                                         @else
-                                                            <input type="text" name="{{ $cont->clave }}" class="form-control" value="{{ $cont->valor }}" style="border-radius: 10px;" required>
+                                                            <input type="text" name="{{ $cont->clave }}" class="form-control" value="{{ $cont->valor }}" style="border-radius: 10px;" maxlength="1000" required>
                                                         @endif
                                                     </div>
                                                 @endforeach
@@ -543,9 +533,9 @@
                                                     <div class="mb-3">
                                                         <label class="form-label small fw-bold text-uppercase text-muted">{{ $cont->titulo }}</label>
                                                         @if(strlen($cont->valor) > 100)
-                                                            <textarea name="{{ $cont->clave }}" class="form-control" rows="3" style="border-radius: 10px;" required>{{ $cont->valor }}</textarea>
+                                                            <textarea name="{{ $cont->clave }}" class="form-control" rows="3" style="border-radius: 10px;" maxlength="1000" required>{{ $cont->valor }}</textarea>
                                                         @else
-                                                            <input type="text" name="{{ $cont->clave }}" class="form-control" value="{{ $cont->valor }}" style="border-radius: 10px;" required>
+                                                            <input type="text" name="{{ $cont->clave }}" class="form-control" value="{{ $cont->valor }}" style="border-radius: 10px;" maxlength="1000" required>
                                                         @endif
                                                     </div>
                                                 @endforeach
@@ -633,22 +623,22 @@
 
                                         <div class="mb-3">
                                             <label for="imagen_url" class="form-label small fw-bold text-uppercase text-muted">Ó pegar URL de Imagen Externa</label>
-                                            <input type="text" name="imagen_url" id="imagen_url" class="form-control" placeholder="https://ejemplo.com/gym-banner.jpg" style="border-radius: 10px;">
+                                            <input type="url" name="imagen_url" id="imagen_url" class="form-control" placeholder="https://ejemplo.com/gym-banner.jpg" style="border-radius: 10px;" maxlength="500">
                                         </div>
 
                                         <div class="mb-3">
                                             <label for="titulo_blanco" class="form-label small fw-bold text-uppercase text-muted">Título Parte 1 (Blanco / Principal)</label>
-                                            <input type="text" name="titulo_blanco" id="titulo_blanco" class="form-control" placeholder="Ej: Potenciá" style="border-radius: 10px;" required>
+                                            <input type="text" name="titulo_blanco" id="titulo_blanco" class="form-control" placeholder="Ej: Potenciá" style="border-radius: 10px;" required minlength="3" maxlength="255">
                                         </div>
 
                                         <div class="mb-3">
                                             <label for="titulo_rojo" class="form-label small fw-bold text-uppercase text-muted">Título Parte 2 (Rojo / Acento)</label>
-                                            <input type="text" name="titulo_rojo" id="titulo_rojo" class="form-control" placeholder="Ej: tu mejor versión" style="border-radius: 10px;" required>
+                                            <input type="text" name="titulo_rojo" id="titulo_rojo" class="form-control" placeholder="Ej: tu mejor versión" style="border-radius: 10px;" required minlength="3" maxlength="255">
                                         </div>
 
                                         <div class="mb-3">
                                             <label for="orden" class="form-label small fw-bold text-uppercase text-muted">Orden de Aparición</label>
-                                            <input type="number" name="orden" id="orden" class="form-control" value="{{ ($welcomeSlides->max('orden') ?? 0) + 1 }}" style="border-radius: 10px;" required>
+                                            <input type="number" name="orden" id="orden" class="form-control" value="{{ ($welcomeSlides->max('orden') ?? 0) + 1 }}" style="border-radius: 10px;" required min="1" step="1">
                                         </div>
 
                                         <button type="submit" class="btn btn-danger rounded-pill w-100 py-2.5 fw-bold text-uppercase mt-2 shadow-sm">
@@ -823,6 +813,24 @@
 
                     window.history.replaceState({}, '', url);
                 });
+            });
+
+            // Validaciones de contraseñas coincidentes en los formularios de usuarios
+            const userForms = document.querySelectorAll('form');
+            userForms.forEach((form) => {
+                const passwordInput = form.querySelector('input[name="password"]');
+                const confirmInput = form.querySelector('input[name="password_confirmation"]');
+                if (passwordInput && confirmInput) {
+                    const validatePassword = () => {
+                        if (passwordInput.value !== confirmInput.value) {
+                            confirmInput.setCustomValidity('Las contraseñas no coinciden.');
+                        } else {
+                            confirmInput.setCustomValidity('');
+                        }
+                    };
+                    passwordInput.addEventListener('change', validatePassword);
+                    confirmInput.addEventListener('keyup', validatePassword);
+                }
             });
         });
     </script>

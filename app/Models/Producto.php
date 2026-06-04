@@ -50,6 +50,17 @@ class Producto extends Model
         return $this->hasMany(Carrito::class, 'producto_id');
     }
 
+    /**
+     * Obtiene los productos que componen este combo.
+     */
+    public function getProductosComboCollectionAttribute()
+    {
+        if (!$this->es_combo || empty($this->productos_combo)) {
+            return collect();
+        }
+        return self::whereIn('id', $this->productos_combo)->get();
+    }
+
     protected static function booted()
     {
         static::creating(function ($producto) {

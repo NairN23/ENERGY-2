@@ -20,12 +20,32 @@ use App\Http\Controllers\MensajeController;
 
 // --- RUTAS PÚBLICAS (Cualquiera puede entrar sin registrarse) ---
 
-// Ruta para la página de inicio (Sección Hero)
 Route::get('/', function () {
     $slides = \App\Models\WelcomeSlide::orderBy('orden', 'asc')->get();
-    $destacados = \App\Models\Producto::where('destacado', 1)->with('categoria')->take(4)->get();
-    return view('welcome', compact('slides', 'destacados'));
-})->name('home'); // MODIFICADO: Le asignamos el nombre 'home' a la raíz para que Laravel redirija acá automáticamente
+    
+    // Obtenemos combos y destacados prioritariamente
+    $combos = \App\Models\Producto::where('stock', '>', 0)->where('es_combo', true)->with('categoria')->get();
+    $destacados = \App\Models\Producto::where('stock', '>', 0)->where('destacado', true)->where('es_combo', false)->with('categoria')->get();
+    
+    $existingIds = $combos->pluck('id')->merge($destacados->pluck('id'))->toArray();
+    
+    // Completamos con productos aleatorios
+    $limitRandom = 12 - count($existingIds);
+    if ($limitRandom < 6) {
+        $limitRandom = 6;
+    }
+    
+    $randoms = \App\Models\Producto::where('stock', '>', 0)
+        ->whereNotIn('id', $existingIds)
+        ->inRandomOrder()
+        ->with('categoria')
+        ->take($limitRandom)
+        ->get();
+        
+    $azar = $combos->merge($destacados)->merge($randoms);
+    
+    return view('welcome', compact('slides', 'azar'));
+})->name('home');
 
 // Ruta para el catálogo de suplementos
 Route::get('/catalogo', [ProductoController::class, 'index'])->name('catalogo');
@@ -77,11 +97,18 @@ Route::middleware(['auth'])->group(function () {
     
     // Nueva ruta AJAX para persistencia inmediata en MariaDB desde el catálogo
     Route::post('/carrito/agregar-ajax', [CarritoController::class, 'agregarAjax'])->name('carrito.agregarAjax');
+    Route::post('/carrito/actualizar-cantidad', [CarritoController::class, 'actualizarCantidadAjax'])->name('carrito.actualizarCantidad');
 
     // Procesos de Compra (Confirmar y guardar en MariaDB)
     Route::get('/compra/confirmar', [CarritoController::class, 'confirmar'])->name('compra.confirmar');
     Route::post('/compra/guardar', [CarritoController::class, 'guardarCompra'])->name('compra.guardar');
     Route::get('/mis-compras', [CarritoController::class, 'misCompras'])->name('mis-compras');
+
+    // Ruta para eliminar direcciones guardadas
+    Route::delete('/direcciones/{id}', [CarritoController::class, 'eliminarDireccion'])->name('direcciones.eliminar');
+
+    // Ruta para cancelar pedido y restablecer el stock
+    Route::post('/mis-compras/pedidos/{id}/cancelar', [CarritoController::class, 'cancelarPedido'])->name('pedidos.cancelar');
 
     // ABM de Productos protegido (Agregar, editar o borrar de la tienda, sólo admins)
     Route::middleware(['admin'])->group(function () {
@@ -94,7 +121,6 @@ Route::middleware(['auth'])->group(function () {
         
         // Rutas para mensajes de contacto
         Route::patch('/admin/mensajes/{id}/leer', [AdminController::class, 'marcarMensajeLeido'])->name('admin.mensajes.leer');
-        Route::delete('/admin/mensajes/{id}', [AdminController::class, 'deleteMensaje'])->name('admin.mensajes.delete');
         
         // Rutas para pedidos/compras
         Route::get('/admin/pedidos/{id}', [AdminController::class, 'verPedido'])->name('admin.pedidos.show');
@@ -107,6 +133,9 @@ Route::middleware(['auth'])->group(function () {
         // Rutas para cambiar el logo de la tienda
         Route::post('/admin/logo/subir', [AdminController::class, 'uploadLogo'])->name('admin.logo.upload');
         Route::delete('/admin/logo/eliminar', [AdminController::class, 'deleteLogo'])->name('admin.logo.delete');
+        
+        // Ruta para actualizar stock rápido desde el panel admin
+        Route::patch('/admin/productos/{id}/stock', [AdminController::class, 'updateStock'])->name('admin.productos.stock');
         
         Route::resource('productos', ProductoController::class)->except(['index', 'show']);
     });

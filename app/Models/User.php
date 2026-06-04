@@ -144,4 +144,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(\App\Models\Carrito::class, 'user_id');
     }
+
+    /**
+     * RELACIÓN: Un usuario puede tener muchas direcciones guardadas.
+     */
+    public function direcciones()
+    {
+        return $this->hasMany(\App\Models\Direccion::class, 'user_id');
+    }
 }

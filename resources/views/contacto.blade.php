@@ -79,7 +79,7 @@
                     @guest
                         <div class="mb-3">
                             <label class="form-label fw-bold small">NOMBRE</label>
-                            <input type="text" name="nombre" class="form-control" placeholder="Tu nombre completo" required>
+                            <input type="text" name="nombre" class="form-control" placeholder="Tu nombre completo" minlength="3" maxlength="255" pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" title="Solo letras y espacios" required>
                             @error('nombre')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -87,7 +87,7 @@
                         
                         <div class="mb-3">
                             <label class="form-label fw-bold small">EMAIL</label>
-                            <input type="email" name="email" class="form-control" placeholder="ejemplo@gmail.com" required>
+                            <input type="email" name="email" class="form-control" placeholder="ejemplo@gmail.com" maxlength="255" required>
                             @error('email')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -95,7 +95,7 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-bold small">TELÉFONO</label>
-                            <input type="tel" name="telefono" class="form-control" placeholder="3794..." required>
+                            <input type="tel" name="telefono" class="form-control" placeholder="3794..." minlength="7" maxlength="20" pattern="^[0-9+\s\-()]+$" title="Solo números, espacios, +, - o paréntesis" required>
                             @error('telefono')
                                 <div class="text-danger small mt-1">{{ $message }}</div>
                             @enderror
@@ -105,7 +105,7 @@
                     {{-- Asunto --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold small">ASUNTO</label>
-                        <input type="text" name="asunto" class="form-control" placeholder="Tema de tu consulta" required>
+                        <input type="text" name="asunto" class="form-control" placeholder="Tema de tu consulta" minlength="3" maxlength="150" required>
                         @error('asunto')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
@@ -114,7 +114,7 @@
                     {{-- El cuadro de mensaje lo ven siempre ambos estados --}}
                     <div class="mb-4">
                         <label class="form-label fw-bold small">MENSAJE</label>
-                        <textarea name="contenido" class="form-control" rows="4" placeholder="¿En qué te ayudamos?" required></textarea>
+                        <textarea name="contenido" class="form-control" rows="4" placeholder="¿En qué te ayudamos?" minlength="10" maxlength="2000" required></textarea>
                         @error('contenido')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
@@ -135,5 +135,47 @@
 
     @include('partials.footer')
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('contactForm');
+            if (!form) return;
+
+            const inputs = form.querySelectorAll('input, textarea');
+
+            inputs.forEach(input => {
+                if (input.type === 'hidden') return;
+
+                const validateInput = () => {
+                    if (input.checkValidity()) {
+                        input.classList.remove('is-invalid');
+                        input.classList.add('is-valid');
+                    } else {
+                        input.classList.remove('is-valid');
+                        input.classList.add('is-invalid');
+                    }
+                };
+
+                input.addEventListener('input', validateInput);
+                input.addEventListener('blur', validateInput);
+            });
+
+            form.addEventListener('submit', function(event) {
+                let isValid = true;
+                inputs.forEach(input => {
+                    if (input.type === 'hidden') return;
+                    if (!input.checkValidity()) {
+                        input.classList.add('is-invalid');
+                        isValid = false;
+                    }
+                });
+
+                if (!isValid) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    alert('Por favor, completa los campos requeridos con datos válidos.');
+                }
+            });
+        });
+    </script>
 </body>
 </html>

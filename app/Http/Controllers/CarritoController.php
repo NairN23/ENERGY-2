@@ -23,25 +23,35 @@ class CarritoController extends Controller
             if (method_exists($user, 'carritos')) {
                 $itemsEnBaseDeDatos = $user->carritos()->with('producto')->get();
 
-                // Formateamos los datos para la estructura exacta que usa localStorage (name y price)
+                // Formateamos los datos para la estructura exacta que usa localStorage (id, name, price, cantidad, stock)
                 $carritoFormateado = $itemsEnBaseDeDatos->map(function ($item) {
-                    return [
-                        'id'    => $item->producto->id,
-                        'name'  => $item->producto->nombre,
-                        'price' => $item->producto->precio,
-                    ];
-                });
+                    if ($item->producto) {
+                        return [
+                            'id'    => $item->producto->id,
+                            'name'  => $item->producto->nombre,
+                            'price' => $item->producto->precio,
+                            'cantidad' => $item->cantidad,
+                            'stock' => $item->producto->stock,
+                        ];
+                    }
+                    return null;
+                })->filter()->values();
             } else {
                 // Alternativa de respaldo directo por Query Builder si la relación no está declarada
                 $itemsEnBaseDeDatos = Carrito::where('user_id', $user->id)->with('producto')->get();
                 
                 $carritoFormateado = $itemsEnBaseDeDatos->map(function ($item) {
-                    return [
-                        'id'    => $item->producto->id,
-                        'name'  => $item->producto->nombre,
-                        'price' => $item->producto->precio,
-                    ];
-                });
+                    if ($item->producto) {
+                        return [
+                            'id'    => $item->producto->id,
+                            'name'  => $item->producto->nombre,
+                            'price' => $item->producto->precio,
+                            'cantidad' => $item->cantidad,
+                            'stock' => $item->producto->stock,
+                        ];
+                    }
+                    return null;
+                })->filter()->values();
             }
         }
 
@@ -76,6 +86,17 @@ class CarritoController extends Controller
 
     public function eliminar($id)
     {
+        if (Auth::check()) {
+            $user = Auth::user();
+            Carrito::where('user_id', $user->id)
+                ->where('producto_id', $id)
+                ->delete();
+        }
+
+        if (request()->ajax() || request()->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
         return back()->with('success', 'Producto eliminado.');
     }
 
@@ -91,34 +112,87 @@ class CarritoController extends Controller
             'cliente_telefono' => 'required|string|max:50',
             'cliente_email' => 'required|email|max:255',
             'direccion_entrega' => 'required|string',
-            'metodo_pago' => 'required|in:transferencia,mercado_pago',
-            'comprobante' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:4096',
+            'metodo_pago' => 'required|in:transferencia,mercado_pago,whatsapp',
+            'comprobante' => 'nullable|file|mimes:pdf|max:4096',
             'carrito_data' => 'required|json',
             'mp_payment_id' => 'nullable|string|max:100',
         ]);
 
-        $cart = json_decode($request->carrito_data, true);
-        if (empty($cart)) {
+        $cartRaw = json_decode($request->carrito_data, true);
+        if (empty($cartRaw)) {
             return back()->withErrors(['carrito' => 'El carrito está vacío.'])->withInput();
         }
 
-        // 1. Calculamos el total seguro a nivel servidor
-        $subtotal = 0;
-        $detallesAGuardar = [];
-
-        foreach ($cart as $item) {
-            $producto = \App\Models\Producto::where('nombre', $item['name'])->first();
+        // Agrupación: Agrupar por producto_id para que productos duplicados sumen su cantidad
+        $aggregatedCart = [];
+        foreach ($cartRaw as $item) {
+            $producto = null;
+            if (isset($item['id'])) {
+                $producto = \App\Models\Producto::find($item['id']);
+            }
+            if (!$producto) {
+                $producto = \App\Models\Producto::where('nombre', $item['name'] ?? '')->first();
+            }
             if ($producto) {
-                $subtotal += $producto->precio;
-                $detallesAGuardar[] = [
-                    'producto' => $producto,
-                    'precio_unitario' => $producto->precio,
-                ];
+                $id = $producto->id;
+                $cantidad = intval($item['cantidad'] ?? 1);
+                if (isset($aggregatedCart[$id])) {
+                    $aggregatedCart[$id]['cantidad'] += $cantidad;
+                } else {
+                    $aggregatedCart[$id] = [
+                        'producto' => $producto,
+                        'cantidad' => $cantidad,
+                    ];
+                }
             }
         }
 
-        if (empty($detallesAGuardar)) {
-            return back()->withErrors(['carrito' => 'Los productos en tu carrito ya no están disponibles.'])->withInput();
+        // Calcular el requerimiento total de stock para cada producto (incluyendo combos y componentes)
+        $requiredStocks = [];
+        foreach ($aggregatedCart as $id => $item) {
+            $producto = $item['producto'];
+            $cantidad = $item['cantidad'];
+
+            // Sumamos al requerimiento del producto principal
+            if (isset($requiredStocks[$producto->id])) {
+                $requiredStocks[$producto->id] += $cantidad;
+            } else {
+                $requiredStocks[$producto->id] = $cantidad;
+            }
+
+            // Si es un combo, sumamos al requerimiento de sus componentes individuales
+            if ($producto->es_combo && is_array($producto->productos_combo)) {
+                foreach ($producto->productos_combo as $subId) {
+                    if (isset($requiredStocks[$subId])) {
+                        $requiredStocks[$subId] += $cantidad;
+                    } else {
+                        $requiredStocks[$subId] = $cantidad;
+                    }
+                }
+            }
+        }
+
+        // Validar stock consolidado de todos los productos involucrados
+        foreach ($requiredStocks as $prodId => $reqQty) {
+            $p = \App\Models\Producto::find($prodId);
+            if (!$p) {
+                return back()->withErrors([
+                    'carrito' => "El producto con ID {$prodId} no existe en el catálogo."
+                ])->withInput();
+            }
+            if ($p->stock < $reqQty) {
+                return back()->withErrors([
+                    'carrito' => "No hay suficiente stock disponible para '{$p->nombre}' (Requerido: {$reqQty}, Disponible: {$p->stock})."
+                ])->withInput();
+            }
+        }
+
+        // Calcular el subtotal y el total con posible descuento por transferencia
+        $subtotal = 0;
+        foreach ($aggregatedCart as $id => $item) {
+            $producto = $item['producto'];
+            $cantidad = $item['cantidad'];
+            $subtotal += $producto->precio * $cantidad;
         }
 
         $descuento = 0;
@@ -127,13 +201,12 @@ class CarritoController extends Controller
         }
         $total = $subtotal - $descuento;
 
-        // 2. Procesamos el comprobante de transferencia si aplica
+        // Procesar el comprobante de transferencia si aplica y fue cargado
         $rutaComprobante = null;
         if ($request->metodo_pago === 'transferencia' && $request->hasFile('comprobante')) {
             $archivo = $request->file('comprobante');
             $nombreArchivo = 'comprobante_' . time() . '_' . uniqid() . '.' . $archivo->getClientOriginalExtension();
             
-            // Creamos el directorio si no existe
             if (!file_exists(public_path('uploads/comprobantes'))) {
                 mkdir(public_path('uploads/comprobantes'), 0777, true);
             }
@@ -142,7 +215,24 @@ class CarritoController extends Controller
             $rutaComprobante = '/uploads/comprobantes/' . $nombreArchivo;
         }
 
-        // 3. Creamos el registro del Pedido
+        // Guardar la dirección en la tabla de direcciones para el usuario si es la primera vez o es nueva
+        if (Auth::check()) {
+            $user = Auth::user();
+            $direccionExistente = \App\Models\Direccion::where('user_id', $user->id)
+                ->where('direccion_entrega', $request->direccion_entrega)
+                ->exists();
+            if (!$direccionExistente) {
+                \App\Models\Direccion::create([
+                    'user_id' => $user->id,
+                    'cliente_nombre' => $request->cliente_nombre,
+                    'cliente_telefono' => $request->cliente_telefono,
+                    'cliente_email' => $request->cliente_email,
+                    'direccion_entrega' => $request->direccion_entrega,
+                ]);
+            }
+        }
+
+        // Crear el registro de Pedido
         $pedido = \App\Models\Pedido::create([
             'user_id' => auth()->id(),
             'cliente_nombre' => $request->cliente_nombre,
@@ -156,25 +246,29 @@ class CarritoController extends Controller
             'mp_payment_id' => $request->mp_payment_id,
         ]);
 
-        // 4. Creamos los detalles del Pedido y restamos Stock
-        foreach ($detallesAGuardar as $det) {
-            $producto = $det['producto'];
-            
+        // Crear los registros de PedidoDetalle
+        foreach ($aggregatedCart as $id => $item) {
+            $producto = $item['producto'];
+            $cantidad = $item['cantidad'];
+
             \App\Models\PedidoDetalle::create([
                 'pedido_id' => $pedido->id,
                 'producto_id' => $producto->id,
-                'cantidad' => 1,
-                'precio_unitario' => $det['precio_unitario'],
-                'subtotal' => $det['precio_unitario'], // subtotal para 1 unidad
+                'cantidad' => $cantidad,
+                'precio_unitario' => $producto->precio,
+                'subtotal' => $producto->precio * $cantidad,
             ]);
+        }
 
-            // Restamos 1 al stock disponible del producto de forma segura
-            if ($producto->stock > 0) {
-                $producto->decrement('stock', 1);
+        // Decrementar el stock consolidado de los productos
+        foreach ($requiredStocks as $prodId => $reqQty) {
+            $p = \App\Models\Producto::find($prodId);
+            if ($p) {
+                $p->decrement('stock', $reqQty);
             }
         }
 
-        // 5. Vaciamos el carrito de MariaDB si el usuario está autenticado
+        // Vaciar el carrito en MariaDB si el usuario está autenticado
         if (Auth::check()) {
             $user = Auth::user();
             if (method_exists($user, 'carritos')) {
@@ -212,22 +306,24 @@ class CarritoController extends Controller
     {
         $request->validate([
             'producto_id' => 'required|exists:productos,id',
+            'cantidad' => 'nullable|integer|min:1',
         ]);
 
         if (Auth::check()) {
             $user = Auth::user();
+            $cantidad = intval($request->input('cantidad', 1));
             
             $item = \App\Models\Carrito::where('user_id', $user->id)
                 ->where('producto_id', $request->producto_id)
                 ->first();
 
             if ($item) {
-                $item->increment('cantidad', 1);
+                $item->increment('cantidad', $cantidad);
             } else {
                 \App\Models\Carrito::create([
                     'user_id' => $user->id,
                     'producto_id' => $request->producto_id,
-                    'cantidad' => 1,
+                    'cantidad' => $cantidad,
                 ]);
             }
 
@@ -241,5 +337,102 @@ class CarritoController extends Controller
             'success' => false,
             'message' => 'Usuario no autenticado.'
         ], 401);
+    }
+
+    /**
+     * AJAX: Actualiza la cantidad de un producto en el carrito en tiempo real
+     */
+    public function actualizarCantidadAjax(Request $request)
+    {
+        $request->validate([
+            'producto_id' => 'required|exists:productos,id',
+            'cantidad' => 'required|integer|min:1',
+        ]);
+
+        if (Auth::check()) {
+            $user = Auth::user();
+            $producto = \App\Models\Producto::find($request->producto_id);
+
+            // Validar stock
+            if ($request->cantidad > $producto->stock) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay suficiente stock disponible. (Máximo: ' . $producto->stock . ')'
+                ], 422);
+            }
+
+            $item = \App\Models\Carrito::where('user_id', $user->id)
+                ->where('producto_id', $request->producto_id)
+                ->first();
+
+            if ($item) {
+                $item->update(['cantidad' => $request->cantidad]);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cantidad actualizada en MariaDB.'
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Usuario no autenticado.'
+        ], 401);
+    }
+
+    /**
+     * AJAX: Elimina una dirección guardada
+     */
+    public function eliminarDireccion($id)
+    {
+        if (Auth::check()) {
+            $direccion = Auth::user()->direcciones()->find($id);
+            if ($direccion) {
+                $direccion->delete();
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Dirección eliminada correctamente.'
+                ]);
+            }
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'No autorizado.'
+        ], 403);
+    }
+
+    /**
+     * Permite al cliente cancelar un pedido pendiente y devuelve el stock
+     */
+    public function cancelarPedido($id)
+    {
+        $pedido = \App\Models\Pedido::where('user_id', auth()->id())
+            ->where('id', $id)
+            ->where('estado', 'pendiente')
+            ->firstOrFail();
+
+        // Restauramos el stock
+        foreach ($pedido->detalles as $detalle) {
+            $producto = $detalle->producto;
+            if ($producto) {
+                // Devolvemos el stock del producto principal
+                $producto->increment('stock', $detalle->cantidad);
+
+                // Si es un combo, devolvemos el stock de sus componentes
+                if ($producto->es_combo && is_array($producto->productos_combo)) {
+                    foreach ($producto->productos_combo as $subId) {
+                        $subProd = \App\Models\Producto::find($subId);
+                        if ($subProd) {
+                            $subProd->increment('stock', $detalle->cantidad);
+                        }
+                    }
+                }
+            }
+        }
+
+        $pedido->update(['estado' => 'cancelado']);
+
+        return redirect()->back()->with('success', 'Pedido #' . $id . ' cancelado correctamente. El stock ha sido restablecido.');
     }
 }

@@ -67,16 +67,12 @@
                         <span class="fw-bold fs-5 text-danger" id="total">$0</span>
                     </div>
                     
-                    <button onclick="enviarPedidoWhatsApp()" class="btn btn-outline-dark w-100 py-3 mb-2 fw-bold rounded-pill text-uppercase shadow-sm">
-                        <i class="bi bi-whatsapp me-2"></i> Finalizar por WhatsApp
-                    </button>
-
                     <a href="{{ route('compra.confirmar') }}" class="btn btn-danger w-100 py-3 fw-bold rounded-pill text-uppercase shadow" id="btnCheckoutOnline">
-                        <i class="bi bi-shield-check me-2"></i> Pagar Online / Transferencia
+                        <i class="bi bi-credit-card-2-back me-2"></i> Iniciar Compra / Pagar
                     </a>
                     
                     <p class="text-center text-muted mt-3" style="font-size: 0.7rem;">
-                        Paga de forma segura online o por transferencia y obtén tu comprobante al instante.
+                        Inicia el registro de tu compra de forma segura y elige tu método de pago preferido.
                     </p>
                 </div>
             </div>
@@ -102,7 +98,7 @@
 
         /**
          * Lee los productos guardados en el navegador (localStorage)
-         * y genera el HTML para mostrarlos en pantalla.
+         * y genera el HTML para mostrarlos en pantalla con cantidades.
          */
         function renderCart() {
             const cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
@@ -137,19 +133,28 @@
             let html = '';
             let total = 0;
 
-            cart.forEach((item, index) => {
+            cart.forEach((item) => {
                 const price = parseFloat(item.price);
-                total += price;
+                const qty = parseInt(item.cantidad || 1);
+                const subtotal = price * qty;
+                total += subtotal;
 
                 html += `
-                <div class="product-item d-flex align-items-center justify-content-between">
+                <div class="product-item d-flex align-items-center justify-content-between py-3 border-bottom">
                     <div>
                         <h6 class="mb-0 fw-bold text-uppercase" style="font-size: 0.85rem;">${item.name}</h6>
                         <small class="text-muted">Unidad: $${price.toLocaleString()}</small>
                     </div>
-                    <div class="text-end">
-                        <p class="mb-0 fw-bold">$${price.toLocaleString()}</p>
-                        <span class="btn-remove fw-bold text-uppercase" onclick="removeItem(${index})">Eliminar</span>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="input-group input-group-sm bg-light rounded-pill px-2 py-1" style="max-width: 100px; border: 1px solid #ddd;">
+                            <button class="btn btn-xs btn-link p-0 text-dark fw-bold border-0" onclick="changeCartQty(${item.id}, -1)" style="font-size: 0.75rem; text-decoration: none; width: 18px; height: 18px; line-height: 1;">-</button>
+                            <input type="text" class="form-control text-center p-0 border-0 bg-transparent" value="${qty}" style="width: 32px; font-size: 0.8rem; height: 18px; box-shadow: none;" readonly>
+                            <button class="btn btn-xs btn-link p-0 text-dark fw-bold border-0" onclick="changeCartQty(${item.id}, 1)" style="font-size: 0.75rem; text-decoration: none; width: 18px; height: 18px; line-height: 1;">+</button>
+                        </div>
+                        <div class="text-end" style="min-width: 90px;">
+                            <p class="mb-0 fw-bold">$${subtotal.toLocaleString()}</p>
+                            <span class="btn-remove fw-bold text-uppercase" onclick="removeItem(${item.id})" style="font-size: 0.7rem;">Eliminar</span>
+                        </div>
                     </div>
                 </div>
                 `;
@@ -161,17 +166,72 @@
         }
 
         /**
-         * Elimina un producto del carrito basado en su posición (index)
+         * Cambia la cantidad de un producto en el carrito, validando stock
          */
-        function removeItem(index) {
+        function changeCartQty(id, change) {
             let cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
-            
-            // Opcional: Acá podrías mandar un fetch POST a 'carrito.eliminar' si querés borrarlo de la BD en tiempo real
-            cart.splice(index, 1);
+            const itemIndex = cart.findIndex(item => item.id === id);
+            if (itemIndex === -1) return;
+
+            const currentQty = parseInt(cart[itemIndex].cantidad || 1);
+            const newQty = currentQty + change;
+            const stock = parseInt(cart[itemIndex].stock || 9999);
+
+            if (newQty < 1) {
+                removeItem(id);
+                return;
+            }
+
+            if (newQty > stock) {
+                alert('No puedes agregar más unidades de las disponibles en stock (Máximo: ' + stock + ').');
+                return;
+            }
+
+            cart[itemIndex].cantidad = newQty;
             localStorage.setItem('energy_cart', JSON.stringify(cart));
             renderCart();
+
+            // Guardar cambio en base de datos
+            fetch("{{ route('carrito.actualizarCantidad') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ producto_id: id, cantidad: newQty })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (typeof syncCartBadge === 'function') syncCartBadge();
+            })
+            .catch(err => console.error(err));
+        }
+
+        /**
+         * Elimina un producto del carrito
+         */
+        function removeItem(id) {
+            if (!confirm('¿Seguro deseas eliminar este suplemento de tu carrito?')) return;
+            let cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
+            const index = cart.findIndex(item => item.id === id);
+            if (index !== -1) {
+                cart.splice(index, 1);
+                localStorage.setItem('energy_cart', JSON.stringify(cart));
+            }
+            renderCart();
             
-            if(typeof syncCartBadge === 'function') syncCartBadge();
+            fetch(`/carrito/eliminar/${id}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(() => {
+                if(typeof syncCartBadge === 'function') syncCartBadge();
+            })
+            .catch(err => console.error(err));
         }
 
         // Al vaciar el carrito por completo limpiamos el almacenamiento del navegador
@@ -181,24 +241,12 @@
         });
 
         /**
-         * Crea un mensaje de texto formateado y abre WhatsApp con el pedido
+         * Redirige al checkout pre-seleccionando WhatsApp
          */
         function enviarPedidoWhatsApp() {
             const cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
             if(cart.length === 0) return alert("Tu carrito está vacío");
-
-            let mensaje = "¡Hola ENERGY! ⚡ Quiero realizar el siguiente pedido:%0A%0A";
-            let total = 0;
-
-            cart.forEach((item, i) => {
-                mensaje += `- ${item.name} ($${item.price})%0A`;
-                total += parseFloat(item.price);
-            });
-
-            mensaje += `%0A*Total: $${total.toLocaleString()}*%0A%0A_¿Me confirmarías stock para coordinar el envío?_`;
-
-            const telefono = "543794576548";
-            window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
+            window.location.href = "{{ route('compra.confirmar') }}?metodo=whatsapp";
         }
 
         // Ejecutar la sincronización y el renderizado apenas cargue el DOM

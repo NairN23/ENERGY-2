@@ -13,8 +13,8 @@ class ProductoController extends Controller
      */
     public function index()
     {
-        // Traemos todos los productos con su categoría para el catálogo público
-        $productos = Producto::with('categoria')->get();
+        // Traemos sólo los productos que tengan stock > 0 con su categoría para el catálogo público
+        $productos = Producto::where('stock', '>', 0)->with('categoria')->get();
         return view('catalogo', compact('productos'));
     }
 
