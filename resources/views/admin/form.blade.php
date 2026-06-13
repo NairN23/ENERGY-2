@@ -79,12 +79,12 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label for="stock" class="form-label fw-bold small text-uppercase text-muted">Stock Disponible</label>
                         <input type="number" name="stock" id="stock" class="form-control" style="border-radius: 10px;" value="{{ old('stock', $producto->stock ?? 0) }}" min="0" required>
                     </div>
 
-                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                    <div class="col-md-3 mb-3 d-flex align-items-end">
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" name="es_combo" id="es_combo" value="1" {{ old('es_combo', $producto->es_combo ?? false) ? 'checked' : '' }} onchange="toggleComboProductsInput()">
                             <label class="form-check-label fw-bold small text-uppercase text-muted" for="es_combo">
@@ -93,11 +93,11 @@
                         </div>
                     </div>
 
-                    <div class="col-md-4 mb-3 d-flex align-items-end">
+                    <div class="col-md-3 mb-3 d-flex align-items-end">
                         <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" name="destacado" id="destacado" value="1" {{ old('destacado', $producto->destacado ?? false) ? 'checked' : '' }}>
-                            <label class="form-check-label fw-bold small text-uppercase text-muted" for="destacado">
-                                ¿Destacado?
+                            <input class="form-check-input" type="checkbox" name="activo" id="activo" value="1" {{ old('activo', $producto->activo ?? true) ? 'checked' : '' }}>
+                            <label class="form-check-label fw-bold small text-uppercase text-muted" for="activo">
+                                ¿Activo?
                             </label>
                         </div>
                     </div>

@@ -33,6 +33,26 @@ class RegisterController extends Controller
             'role' => User::ROLE_CLIENTE,
         ]);
 
+        // 3. Guardamos la dirección del registro en la tabla de direcciones
+        $direccionCompleta = $request->direccion;
+        if ($request->ciudad) {
+            $direccionCompleta .= ', ' . $request->ciudad;
+        }
+        if ($request->provincia) {
+            $direccionCompleta .= ', ' . $request->provincia;
+        }
+        if ($request->cp) {
+            $direccionCompleta .= ' (CP: ' . $request->cp . ')';
+        }
+
+        \App\Models\Direccion::create([
+            'user_id' => $user->id,
+            'cliente_nombre' => $user->name,
+            'cliente_telefono' => '',
+            'cliente_email' => $user->email,
+            'direccion_entrega' => $direccionCompleta,
+        ]);
+
         // MODIFICADO: En vez de loguearlo automáticamente acá, lo redireccionamos al Login con un mensaje de éxito
         return redirect()->route('login')->with('success', '¡Registro completado con éxito! Iniciá sesión con tus datos.');
     }

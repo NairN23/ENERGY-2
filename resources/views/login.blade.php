@@ -294,13 +294,14 @@
 
                             @if ($errors->has('auth_failed'))
                                 <div class="alert alert-danger mb-4" style="border-radius: 14px; font-size: 0.92rem;">
-                                    {{ $errors->first('auth_failed') }}
+                                    Las credenciales no coinciden con nuestro sistema de ENERGY. ¿Desea <a href="{{ route('register') }}" style="color: #7a1c1c; font-weight: 800; text-decoration: underline;">Registrarse</a>?
                                 </div>
                             @endif
 
                             <div class="mb-3">
                                 <label for="email" class="login-label">Email</label>
-                                <input id="email" name="email" type="email" class="form-control login-input @error('email') is-invalid @enderror" placeholder="ejemplo@energy.com.ar" value="{{ old('email') }}" required>
+                                <input id="email" name="email" type="email" class="form-control login-input @error('email') is-invalid @enderror" placeholder="ejemplo@energy.com.ar" value="{{ old('email') }}" required list="savedEmails" autocomplete="email">
+                                <datalist id="savedEmails"></datalist>
                                 @error('email')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -373,11 +374,30 @@
             }
         });
 
+        // Cargar correos guardados en la computadora
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedEmails = JSON.parse(localStorage.getItem('energy_saved_emails')) || [];
+            const datalist = document.getElementById('savedEmails');
+            savedEmails.forEach(email => {
+                const option = document.createElement('option');
+                option.value = email;
+                datalist.appendChild(option);
+            });
+        });
+
         // Evento que analiza el click de envío final sobre el formulario
         document.getElementById('loginForm').addEventListener('submit', function (event) {
             if (!esEmailValido(emailInput.value)) {
                 event.preventDefault(); // Cancela temporalmente el envío SÓLO si el texto del email es inválido
                 emailInput.classList.add('is-invalid');
+            } else {
+                // Guardar el correo en localStorage para próximas visitas
+                const currentEmail = emailInput.value.trim().toLowerCase();
+                let savedEmails = JSON.parse(localStorage.getItem('energy_saved_emails')) || [];
+                if (!savedEmails.includes(currentEmail)) {
+                    savedEmails.push(currentEmail);
+                    localStorage.setItem('energy_saved_emails', JSON.stringify(savedEmails));
+                }
             }
         });
     </script>

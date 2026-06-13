@@ -67,9 +67,24 @@
                         <span class="fw-bold fs-5 text-danger" id="total">$0</span>
                     </div>
                     
-                    <a href="{{ route('compra.confirmar') }}" class="btn btn-danger w-100 py-3 fw-bold rounded-pill text-uppercase shadow" id="btnCheckoutOnline">
-                        <i class="bi bi-credit-card-2-back me-2"></i> Iniciar Compra / Pagar
-                    </a>
+                    @auth
+                        @if(auth()->user()->isAdmin())
+                            <div class="alert alert-warning text-center fw-bold" role="alert" style="border-radius: 12px; font-size: 0.85rem;">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> Los administradores no pueden realizar compras.
+                            </div>
+                            <button class="btn btn-secondary w-100 py-3 fw-bold rounded-pill text-uppercase shadow cursor-not-allowed" disabled style="cursor: not-allowed;">
+                                <i class="bi bi-lock-fill me-2"></i> Iniciar Compra / Pagar
+                            </button>
+                        @else
+                            <a href="{{ route('compra.confirmar') }}" class="btn btn-danger w-100 py-3 fw-bold rounded-pill text-uppercase shadow" id="btnCheckoutOnline">
+                                <i class="bi bi-credit-card-2-back me-2"></i> Iniciar Compra / Pagar
+                            </a>
+                        @endif
+                    @else
+                        <a href="{{ route('compra.confirmar') }}" class="btn btn-danger w-100 py-3 fw-bold rounded-pill text-uppercase shadow" id="btnCheckoutOnline">
+                            <i class="bi bi-credit-card-2-back me-2"></i> Iniciar Compra / Pagar
+                        </a>
+                    @endauth
                     
                     <p class="text-center text-muted mt-3" style="font-size: 0.7rem;">
                         Inicia el registro de tu compra de forma segura y elige tu método de pago preferido.
@@ -183,13 +198,21 @@
             }
 
             if (newQty > stock) {
-                alert('No puedes agregar más unidades de las disponibles en stock (Máximo: ' + stock + ').');
                 return;
             }
 
             cart[itemIndex].cantidad = newQty;
             localStorage.setItem('energy_cart', JSON.stringify(cart));
             renderCart();
+            // Actualizar badge inmediatamente
+            if (typeof syncCartBadge === 'function') {
+                const badge = document.getElementById('cart-count-badge');
+                if (badge) {
+                    const totalItems = cart.reduce((acc, item) => acc + parseInt(item.cantidad || 1), 0);
+                    badge.innerText = totalItems;
+                    badge.style.display = totalItems > 0 ? 'block' : 'none';
+                }
+            }
 
             // Guardar cambio en base de datos
             fetch("{{ route('carrito.actualizarCantidad') }}", {
@@ -201,9 +224,6 @@
                 body: JSON.stringify({ producto_id: id, cantidad: newQty })
             })
             .then(res => res.json())
-            .then(data => {
-                if (typeof syncCartBadge === 'function') syncCartBadge();
-            })
             .catch(err => console.error(err));
         }
 
@@ -234,10 +254,37 @@
             .catch(err => console.error(err));
         }
 
-        // Al vaciar el carrito por completo limpiamos el almacenamiento del navegador
+        // Al vaciar el carrito: primero limpiamos localStorage y luego enviamos vía AJAX
         document.getElementById('formVaciarCarrito').addEventListener('submit', function(e) {
+            e.preventDefault(); // Evitar el submit nativo del form
+            
+            // Limpiar localStorage inmediatamente
             localStorage.removeItem('energy_cart');
-            if(typeof syncCartBadge === 'function') syncCartBadge();
+            
+            // Actualizar badge inmediatamente
+            const badge = document.getElementById('cart-count-badge');
+            if (badge) {
+                badge.innerText = '0';
+                badge.style.display = 'none';
+            }
+            
+            // Enviar petición AJAX al servidor para vaciar en BD
+            fetch("{{ route('carrito.vaciar') }}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(() => {
+                // Recargar la página para reflejar el estado vacío
+                window.location.reload();
+            })
+            .catch(err => {
+                console.error(err);
+                window.location.reload();
+            });
         });
 
         /**

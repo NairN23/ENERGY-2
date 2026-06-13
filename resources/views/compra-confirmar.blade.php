@@ -18,9 +18,43 @@
         .mp-details { display: none; }
         .btn-mp { background-color: #009ee3; color: white; border: none; font-weight: bold; border-radius: 8px; transition: 0.3s; }
         .btn-mp:hover { background-color: #007eb5; }
+        /* Toast de notificación personalizado */
+        .energy-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 320px;
+            max-width: 420px;
+            padding: 16px 20px;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 0.88rem;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .energy-toast.show { transform: translateX(0); opacity: 1; }
+        .energy-toast.success { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); border-left: 4px solid #28a745; }
+        .energy-toast.error { background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); border-left: 4px solid #ff0000; }
+        .energy-toast .toast-icon { font-size: 1.3rem; flex-shrink: 0; }
+        .energy-toast .toast-close { margin-left: auto; background: none; border: none; color: rgba(255,255,255,0.6); font-size: 1.1rem; cursor: pointer; padding: 0 0 0 10px; flex-shrink: 0; }
+        .energy-toast .toast-close:hover { color: #fff; }
     </style>
 </head>
 <body>
+
+    <!-- Toast de notificación personalizado -->
+    <div id="energyToast" class="energy-toast">
+        <span class="toast-icon" id="toastIcon"></span>
+        <span id="toastMessage"></span>
+        <button class="toast-close" onclick="cerrarToast()">&times;</button>
+    </div>
 
     @include('partials.navbar')
 
@@ -76,6 +110,12 @@
                             @endif
                         @endauth
 
+                        @auth
+                            @php
+                                $ultimaDireccion = auth()->user()->direcciones()->latest()->first();
+                            @endphp
+                        @endauth
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="cliente_nombre" class="form-label small fw-bold text-muted">Nombre Completo</label>
@@ -83,7 +123,7 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="cliente_telefono" class="form-label small fw-bold text-muted">Teléfono de Contacto</label>
-                                <input type="text" name="cliente_telefono" id="cliente_telefono" class="form-control" style="border-radius: 10px;" placeholder="Ej: 3794123456" value="{{ old('cliente_telefono') }}" required>
+                                <input type="text" name="cliente_telefono" id="cliente_telefono" class="form-control" style="border-radius: 10px;" placeholder="Ej: 3794123456" value="{{ old('cliente_telefono', $ultimaDireccion->cliente_telefono ?? '') }}" required>
                             </div>
                         </div>
 
@@ -94,7 +134,7 @@
 
                         <div class="mb-4">
                             <label for="direccion_entrega" class="form-label small fw-bold text-muted">Dirección de Entrega</label>
-                            <textarea name="direccion_entrega" id="direccion_entrega" rows="2" class="form-control" style="border-radius: 10px;" placeholder="Calle, número, barrio y localidad" required>{{ old('direccion_entrega') }}</textarea>
+                            <textarea name="direccion_entrega" id="direccion_entrega" rows="2" class="form-control" style="border-radius: 10px;" placeholder="Calle, número, barrio y localidad" required>{{ old('direccion_entrega', $ultimaDireccion->direccion_entrega ?? '') }}</textarea>
                         </div>
 
                         <hr class="my-4">
@@ -137,9 +177,14 @@
                                 <strong>Titular:</strong> ENERGY SRL
                             </div>
                             
-                            <label for="comprobante" class="form-label small fw-bold text-danger"><i class="bi bi-upload me-1"></i> Subir Comprobante de Pago (Únicamente PDF)</label>
-                            <input type="file" name="comprobante" id="comprobante" class="form-control" accept="application/pdf">
-                            <span class="text-muted small d-block mt-1" style="font-size: 0.72rem;">Sube el archivo PDF del comprobante para agilizar la aprobación del pedido.</span>
+                            <label for="comprobante" class="form-label text-danger small fw-bold" style="letter-spacing: 0.05em;">
+                                <i class="bi bi-upload me-1"></i> Subir Comprobante de Pago (Únicamente PDF)
+                            </label>
+                            <input class="form-control mb-2" type="file" name="comprobante" id="comprobante" accept=".pdf">
+                            <small class="text-muted" style="font-size: 0.7rem;">Sube el archivo PDF del comprobante para agilizar la aprobación del pedido.</small>
+                            <div id="comprobanteError" class="text-danger small fw-bold mt-1" style="display: none;">
+                                <i class="bi bi-exclamation-circle me-1"></i> El archivo debe ser en formato PDF únicamente. Por favor seleccioná otro archivo.
+                            </div>
                         </div>
 
                         <!-- Detalles Mercado Pago -->
@@ -165,7 +210,7 @@
                         <input type="hidden" name="mp_payment_id" id="mp_payment_id">
 
                         <button type="submit" class="btn btn-danger w-100 py-3 fw-bold text-uppercase rounded-pill shadow mt-2" id="btnSubmitForm">
-                            Confirmar Compra y Registrar Pedido
+                            Confirmar Compra
                         </button>
                     </form>
                 </div>
@@ -179,18 +224,18 @@
                     <div id="checkout-items-list" class="mb-4"></div>
                     
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Subtotal</span>
+                        <span style="color: #b0b0b0; font-weight: 600;">Subtotal</span>
                         <span id="checkout-subtotal" class="fw-bold">$0</span>
                     </div>
                     
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">Descuento</span>
-                        <span id="checkout-discount" class="text-warning fw-bold">$0</span>
+                        <span style="color: #b0b0b0; font-weight: 600;">Descuento</span>
+                        <span id="checkout-discount" class="fw-bold" style="color: #ffc107;">$0</span>
                     </div>
 
                     <div class="d-flex justify-content-between mb-3">
-                        <span class="text-muted">Envío</span>
-                        <span class="text-success fw-bold">Gratis</span>
+                        <span style="color: #b0b0b0; font-weight: 600;">Envío</span>
+                        <span class="fw-bold" style="color: #28a745;">Gratis</span>
                     </div>
                     <hr class="border-secondary">
                     
@@ -266,7 +311,7 @@
             if (!select) return;
             const id = select.value;
             if (!id) {
-                alert('Por favor selecciona una dirección guardada para eliminar.');
+                mostrarToastCheckout('Por favor seleccioná una dirección guardada para eliminar.', 'error');
                 return;
             }
 
@@ -281,15 +326,15 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        alert(data.message || 'Dirección eliminada correctamente.');
+                        mostrarToastCheckout(data.message || 'Dirección eliminada correctamente.', 'success');
                         location.reload();
                     } else {
-                        alert('Error al eliminar la dirección.');
+                        mostrarToastCheckout('Error al eliminar la dirección.', 'error');
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    alert('Error en la solicitud.');
+                    mostrarToastCheckout('Error en la solicitud.', 'error');
                 });
             }
         }
@@ -361,6 +406,7 @@
                 mpBox.style.display = 'none';
                 if(waBox) waBox.style.display = 'none';
                 inputComprobante.required = true;
+                document.getElementById('btnSubmitForm').style.display = 'block';
             } else if (metodo === 'mercado_pago') {
                 if(radioTransfer) radioTransfer.checked = false;
                 radioMP.checked = true;
@@ -369,6 +415,13 @@
                 mpBox.style.display = 'block';
                 if(waBox) waBox.style.display = 'none';
                 inputComprobante.required = false;
+                inputComprobante.value = ''; // Limpiar archivo cacheado
+                document.getElementById('comprobanteError').style.display = 'none';
+                // Ocultamos el botón principal porque el usuario debe hacer click en Pagar con Mercado Pago primero
+                document.getElementById('btnSubmitForm').style.display = 'none';
+                // Aseguramos que el botón de MP esté visible si cambió de opinión antes
+                const btnMP = document.querySelector('#mpDetailsBox .btn-mp');
+                if (btnMP) btnMP.style.display = 'block';
             } else if (metodo === 'whatsapp') {
                 if(radioTransfer) radioTransfer.checked = false;
                 if(radioMP) radioMP.checked = false;
@@ -377,6 +430,9 @@
                 mpBox.style.display = 'none';
                 if(waBox) waBox.style.display = 'block';
                 inputComprobante.required = false;
+                inputComprobante.value = ''; // Limpiar archivo cacheado
+                document.getElementById('comprobanteError').style.display = 'none';
+                document.getElementById('btnSubmitForm').style.display = 'block';
             }
 
             renderCheckoutCart();
@@ -385,6 +441,12 @@
         // Simulación Mercado Pago
         let mpModal;
         function simularPagoMercadoPago() {
+            const form = document.getElementById('checkoutForm');
+            // Validar que los campos obligatorios estén llenos antes de simular el pago
+            if (!form.reportValidity()) {
+                return;
+            }
+            
             document.getElementById('mpModalMonto').innerText = `$${cartTotal.toLocaleString()}`;
             mpModal = new bootstrap.Modal(document.getElementById('mpSimulationModal'));
             mpModal.show();
@@ -399,7 +461,25 @@
             document.getElementById('mpRefId').innerText = paymentId;
             msgEl.classList.remove('d-none');
 
-            alert('¡Pago aprobado por Mercado Pago sandbox! Completa el registro abajo para consolidar la orden.');
+            // Ocultar el botón de Pagar con MP ya que se realizó el pago
+            const btnMP = document.querySelector('#mpDetailsBox .btn-mp');
+            if (btnMP) btnMP.style.display = 'none';
+
+            // Mostrar nuevamente el botón Confirmar Compra por si falla la validación automática
+            document.getElementById('btnSubmitForm').style.display = 'block';
+
+            // Validar que los campos requeridos estén completos antes de enviar automáticamente
+            const form = document.getElementById('checkoutForm');
+            const nombre = document.getElementById('cliente_nombre').value.trim();
+            const telefono = document.getElementById('cliente_telefono').value.trim();
+            const email = document.getElementById('cliente_email').value.trim();
+            const direccion = document.getElementById('direccion_entrega').value.trim();
+            
+            if (nombre && telefono && email && direccion) {
+                // Todos los datos están completos, enviar directamente
+                form.submit();
+            }
+            // Si falta algún dato, el usuario debe completarlo y luego dar click en Confirmar
         }
 
         // Validación final
@@ -407,7 +487,7 @@
             const cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
             if (cart.length === 0) {
                 e.preventDefault();
-                alert('No puedes procesar una compra con el carrito vacío.');
+                mostrarToastCheckout('No puedes procesar una compra con el carrito vacío.', 'error');
                 return;
             }
 
@@ -416,7 +496,7 @@
 
             if (radioMP && !paymentId) {
                 e.preventDefault();
-                alert('Debes completar el pago seguro con Mercado Pago antes de confirmar el pedido.');
+                mostrarToastCheckout('Debes completar el pago seguro con Mercado Pago antes de confirmar el pedido.', 'error');
                 return;
             }
 
@@ -427,12 +507,29 @@
                     const file = fileInput.files[0];
                     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
                         e.preventDefault();
-                        alert('Error: El comprobante de transferencia debe ser un archivo en formato PDF únicamente.');
+                        document.getElementById('comprobanteError').style.display = 'block';
+                        fileInput.value = '';
                         return;
                     }
                 }
             }
         });
+
+        // Validación instantánea del formato del comprobante al seleccionar archivo
+        function validarComprobante(input) {
+            const errorDiv = document.getElementById('comprobanteError');
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                    errorDiv.style.display = 'block';
+                    input.value = '';
+                } else {
+                    errorDiv.style.display = 'none';
+                }
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             renderCheckoutCart();
@@ -447,6 +544,28 @@
                 seleccionarMetodo('transferencia');
             }
         });
+
+        // Sistema de Toast/Notificación personalizado
+        let toastTimeout;
+        function mostrarToastCheckout(mensaje, tipo) {
+            const toast = document.getElementById('energyToast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+            
+            toast.className = 'energy-toast ' + tipo;
+            icon.innerHTML = tipo === 'success' ? '<i class="bi bi-check-circle-fill text-success"></i>' : '<i class="bi bi-exclamation-triangle-fill text-danger"></i>';
+            msg.textContent = mensaje;
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => cerrarToast(), 3500);
+        }
+        
+        function cerrarToast() {
+            const toast = document.getElementById('energyToast');
+            toast.classList.remove('show');
+        }
     </script>
 </body>
 </html>

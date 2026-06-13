@@ -13,8 +13,11 @@ class ProductoController extends Controller
      */
     public function index()
     {
-        // Traemos sólo los productos que tengan stock > 0 con su categoría para el catálogo público
-        $productos = Producto::where('stock', '>', 0)->with('categoria')->get();
+        // Traemos sólo los productos que tengan stock > 0, estén activos, con su categoría para el catálogo público
+        $productos = Producto::where('stock', '>', 0)
+                            ->where('activo', true)
+                            ->with('categoria')
+                            ->get();
         return view('catalogo', compact('productos'));
     }
 
@@ -39,7 +42,6 @@ class ProductoController extends Controller
             'descripcion' => 'nullable|string',
             'imagen' => 'nullable|image|max:4096',
             'es_combo' => 'nullable|boolean',
-            'destacado' => 'nullable|boolean',
             'stock' => 'nullable|integer|min:0',
         ]);
 
@@ -70,10 +72,9 @@ class ProductoController extends Controller
             'descripcion' => $request->descripcion,
             'imagen' => $rutaImagen,
             'es_combo' => $request->has('es_combo') ? true : false,
-            'destacado' => $request->has('destacado') ? true : false,
+            'activo' => $request->has('activo') ? true : false,
             'productos_combo' => $request->has('es_combo') ? $request->productos_combo : null,
             'stock' => $request->stock ?? 0,
-            'activo' => true,
         ]);
 
         return redirect()->route('admin.index')->with('success', '¡Producto cargado con éxito en la base de datos!');
@@ -104,7 +105,6 @@ class ProductoController extends Controller
             'descripcion' => 'nullable|string',
             'imagen' => 'nullable|image|max:4096',
             'es_combo' => 'nullable|boolean',
-            'destacado' => 'nullable|boolean',
             'stock' => 'nullable|integer|min:0',
         ]);
 
@@ -140,7 +140,7 @@ class ProductoController extends Controller
             'descripcion' => $request->descripcion,
             'imagen' => $rutaImagen,
             'es_combo' => $request->has('es_combo') ? true : false,
-            'destacado' => $request->has('destacado') ? true : false,
+            'activo' => $request->has('activo') ? true : false,
             'productos_combo' => $request->has('es_combo') ? $request->productos_combo : null,
             'stock' => $request->stock ?? 0,
         ]);

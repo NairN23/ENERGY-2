@@ -50,7 +50,7 @@ class LoginController extends Controller
     public function logout(Request $request)
     {
         // PERSISTENCIA: Si venían suplementos desde el localStorage de la Navbar
-        if ($request->has('carrito_data') && Auth::check()) {
+        if ($request->has('carrito_data') && Auth::check() && !Auth::user()->isAdmin()) {
             $user = Auth::user();
             
             // CORREGIDO: Decodificamos el JSON directamente a un array nativo de PHP
@@ -106,6 +106,6 @@ class LoginController extends Controller
         $request->session()->regenerateToken();
 
         // MODIFICADO: Nos aseguramos de que al salir también vaya derecho a la principal
-        return redirect('/');
+        return redirect('/')->with('clear_cart', true);
     }
 }

@@ -222,18 +222,37 @@
                 
                 {{-- Control del acceso al carrito mediante directivas Blade --}}
                 @auth
-                    <a href="/carrito" class="energy-action-link position-relative {{ request()->is('carrito') ? 'active' : '' }}" aria-label="Ver carrito de compras">
-                        <i class="bi bi-cart3 energy-action-icon" aria-hidden="true"></i>
-                        <span id="cart-count-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55rem; display: none;">
-                            0
-                        </span>
-                    </a>
+                    @if(!auth()->user()->isAdmin())
+                        <a href="/carrito" class="energy-action-link position-relative {{ request()->is('carrito') ? 'active' : '' }}" aria-label="Ver carrito de compras">
+                            <i class="bi bi-cart3 energy-action-icon" aria-hidden="true"></i>
+                            <span id="cart-count-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.55rem; display: none;">
+                                0
+                            </span>
+                        </a>
+                    @endif
                 @endauth
 
             </div>
         </div>
     </div>
 </nav>
+
+@if(session('success'))
+    <div class="container mt-3">
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-radius: 12px;">
+            <i class="bi bi-check-circle-fill me-2"></i> <strong>{{ session('success') }}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+@endif
+@if(session('error'))
+    <div class="container mt-3">
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-radius: 12px;">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>{{ session('error') }}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+@endif
 
 <script>
     /**
@@ -253,41 +272,53 @@
     function syncCartBadge() {
         const badge = document.getElementById('cart-count-badge');
         
+        @if(session('clear_cart'))
+            localStorage.removeItem('energy_cart');
+        @endif
+
+        @auth
+            @if(auth()->user()->isAdmin())
+                localStorage.removeItem('energy_cart');
+            @endif
+        @endauth
+        
         {{-- Sincronización bidireccional inmediata para usuarios autenticados --}}
         @auth
-            @php
-                $dbItems = \App\Models\Carrito::where('user_id', auth()->id())->with('producto')->get();
-                $cartFormatted = $dbItems->map(function ($item) {
-                    if ($item->producto) {
-                        return [
-                            'id'    => $item->producto->id,
-                            'name'  => $item->producto->nombre,
-                            'price' => $item->producto->precio,
-                            'cantidad' => $item->cantidad,
-                            'stock' => $item->producto->stock,
-                        ];
-                    }
-                    return null;
-                })->filter()->values();
-            @endphp
-            
-            // Inyectamos y fusionamos el carrito de MariaDB con el localStorage del navegador
-            (function() {
-                const dbCart = {!! $cartFormatted->toJson() !!};
-                let localCart = JSON.parse(localStorage.getItem('energy_cart')) || [];
+            @if(!auth()->user()->isAdmin())
+                @php
+                    $dbItems = \App\Models\Carrito::where('user_id', auth()->id())->with('producto')->get();
+                    $cartFormatted = $dbItems->map(function ($item) {
+                        if ($item->producto) {
+                            return [
+                                'id'    => $item->producto->id,
+                                'name'  => $item->producto->nombre,
+                                'price' => $item->producto->precio,
+                                'cantidad' => $item->cantidad,
+                                'stock' => $item->producto->stock,
+                            ];
+                        }
+                        return null;
+                    })->filter()->values();
+                @endphp
                 
-                dbCart.forEach(dbItem => {
-                    const localItemIndex = localCart.findIndex(localItem => localItem.id === dbItem.id);
-                    if (localItemIndex === -1) {
-                        localCart.push(dbItem);
-                    } else {
-                        localCart[localItemIndex].cantidad = dbItem.cantidad;
-                        localCart[localItemIndex].stock = dbItem.stock;
-                    }
-                });
-                
-                localStorage.setItem('energy_cart', JSON.stringify(localCart));
-            })();
+                // Inyectamos y fusionamos el carrito de MariaDB con el localStorage del navegador
+                (function() {
+                    const dbCart = {!! $cartFormatted->toJson() !!};
+                    let localCart = JSON.parse(localStorage.getItem('energy_cart')) || [];
+                    
+                    dbCart.forEach(dbItem => {
+                        const localItemIndex = localCart.findIndex(localItem => localItem.id === dbItem.id);
+                        if (localItemIndex === -1) {
+                            localCart.push(dbItem);
+                        } else {
+                            localCart[localItemIndex].cantidad = dbItem.cantidad;
+                            localCart[localItemIndex].stock = dbItem.stock;
+                        }
+                    });
+                    
+                    localStorage.setItem('energy_cart', JSON.stringify(localCart));
+                })();
+            @endif
         @endauth
 
         if (badge) {

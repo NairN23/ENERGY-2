@@ -100,9 +100,66 @@
             transform: scale(1.1);
             color: white;
         }
+        /* Toast de notificación personalizado */
+        .energy-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 320px;
+            max-width: 420px;
+            padding: 16px 20px;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 0.88rem;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .energy-toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        .energy-toast.success {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-left: 4px solid #28a745;
+        }
+        .energy-toast.error {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            border-left: 4px solid #ff0000;
+        }
+        .energy-toast .toast-icon {
+            font-size: 1.3rem;
+            flex-shrink: 0;
+        }
+        .energy-toast .toast-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.6);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0 0 0 10px;
+            flex-shrink: 0;
+        }
+        .energy-toast .toast-close:hover {
+            color: #fff;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Toast de notificación personalizado -->
+    <div id="energyToast" class="energy-toast">
+        <span class="toast-icon" id="toastIcon"></span>
+        <span id="toastMessage"></span>
+        <button class="toast-close" onclick="cerrarToast()">&times;</button>
+    </div>
 
     @include('partials.navbar')
 
@@ -181,7 +238,11 @@
                                     <span class="price-text">${{ number_format($producto->precio, 2, ',', '.') }}</span>
 
                                     @auth
-                                        @if($producto->stock > 0)
+                                        @if(auth()->user()->isAdmin())
+                                            <button class="btn-add bg-secondary text-white-50" disabled style="cursor: not-allowed;" title="Los administradores no pueden comprar">
+                                                <i class="bi bi-lock-fill fs-5"></i>
+                                            </button>
+                                        @elseif($producto->stock > 0)
                                             <button class="btn-add add-to-cart" data-id="{{ $producto->id }}" data-name="{{ $producto->nombre }}" data-price="{{ $producto->precio }}" data-stock="{{ $producto->stock }}">
                                                 <i class="bi bi-plus-lg fs-5"></i>
                                             </button>
@@ -281,7 +342,7 @@
                 if (itemIndex !== -1) {
                     const currentQty = parseInt(cart[itemIndex].cantidad || 1);
                     if (currentQty + quantity > stock) {
-                        alert('No puedes agregar más de ' + stock + ' unidades de este producto.');
+                        mostrarToast('No puedes agregar más de ' + stock + ' unidades de este producto.', 'error');
                         return;
                     }
                     cart[itemIndex].cantidad = currentQty + quantity;
@@ -304,14 +365,38 @@
                     if (typeof syncCartBadge === 'function') syncCartBadge();
                     
                     if (qtyInput) qtyInput.value = 1;
-                    alert('¡' + name + ' (' + quantity + ' und) agregado al carrito!');
+                    mostrarToast('¡' + name + ' (' + quantity + ' und) agregado al carrito!', 'success');
                 })
                 .catch(err => {
                     console.error(err);
-                    alert('Error al sincronizar con el servidor.');
+                    mostrarToast('Error al sincronizar con el servidor.', 'error');
                 });
             });
         });
+
+        // Sistema de Toast/Notificación personalizado
+        let toastTimeout;
+        function mostrarToast(mensaje, tipo) {
+            const toast = document.getElementById('energyToast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+            
+            toast.className = 'energy-toast ' + tipo;
+            icon.innerHTML = tipo === 'success' ? '<i class="bi bi-check-circle-fill text-success"></i>' : '<i class="bi bi-exclamation-triangle-fill text-danger"></i>';
+            msg.textContent = mensaje;
+            
+            // Mostrar
+            setTimeout(() => toast.classList.add('show'), 10);
+            
+            // Auto-ocultar después de 3.5 segundos
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => cerrarToast(), 3500);
+        }
+        
+        function cerrarToast() {
+            const toast = document.getElementById('energyToast');
+            toast.classList.remove('show');
+        }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

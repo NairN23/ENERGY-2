@@ -23,26 +23,13 @@ use App\Http\Controllers\MensajeController;
 Route::get('/', function () {
     $slides = \App\Models\WelcomeSlide::orderBy('orden', 'asc')->get();
     
-    // Obtenemos combos y destacados prioritariamente
-    $combos = \App\Models\Producto::where('stock', '>', 0)->where('es_combo', true)->with('categoria')->get();
-    $destacados = \App\Models\Producto::where('stock', '>', 0)->where('destacado', true)->where('es_combo', false)->with('categoria')->get();
-    
-    $existingIds = $combos->pluck('id')->merge($destacados->pluck('id'))->toArray();
-    
-    // Completamos con productos aleatorios
-    $limitRandom = 12 - count($existingIds);
-    if ($limitRandom < 6) {
-        $limitRandom = 6;
-    }
-    
-    $randoms = \App\Models\Producto::where('stock', '>', 0)
-        ->whereNotIn('id', $existingIds)
+    // Mostramos productos aleatorios activos y con stock
+    $azar = \App\Models\Producto::where('stock', '>', 0)
+        ->where('activo', true)
         ->inRandomOrder()
         ->with('categoria')
-        ->take($limitRandom)
+        ->take(12)
         ->get();
-        
-    $azar = $combos->merge($destacados)->merge($randoms);
     
     return view('welcome', compact('slides', 'azar'));
 })->name('home');

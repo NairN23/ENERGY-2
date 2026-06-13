@@ -81,6 +81,12 @@
                     </div>
                 @endif
 
+                @if(session('error'))
+                    <div class="alert alert-danger border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+                    </div>
+                @endif
+
                 @if(session('generated_password'))
                     <div class="alert alert-warning border-0 shadow-sm mb-4" style="border-radius: 12px;">
                         <div class="fw-bold mb-1"><i class="bi bi-key-fill me-2"></i> Contraseña temporal generada</div>
@@ -97,9 +103,119 @@
                     <div class="tab-pane fade show active" id="productos-pane" role="tabpanel">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h3 class="fw-bold text-uppercase m-0">Gestión de <span class="text-danger">Productos</span></h3>
-                            <a href="{{ route('productos.create') }}" class="btn btn-danger rounded-pill px-4 fw-bold text-uppercase shadow-sm">
+                            <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold text-uppercase shadow-sm" data-bs-toggle="modal" data-bs-target="#crearProductoModal">
                                 <i class="bi bi-plus-lg me-1"></i> Cargar Producto
-                            </a>
+                            </button>
+                        </div>
+
+                        <!-- Modal de creación de producto -->
+                        <div class="modal fade" id="crearProductoModal" tabindex="-1" aria-labelledby="crearProductoModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden;">
+                                    <div class="modal-header bg-dark text-white border-0">
+                                        <div>
+                                            <h5 class="modal-title fw-bold text-uppercase" id="crearProductoModalLabel">Cargar Nuevo Producto</h5>
+                                            <span class="small text-white-50">Completá los datos del nuevo suplemento para darlo de alta en la tienda.</span>
+                                        </div>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body p-4">
+                                        <form action="{{ route('productos.store') }}" method="POST" enctype="multipart/form-data">
+                                            @csrf
+
+                                            <div class="mb-3">
+                                                <label for="modal_nombre" class="form-label fw-bold small text-uppercase text-muted">Nombre del Suplemento</label>
+                                                <input type="text" name="nombre" id="modal_nombre" class="form-control" style="border-radius: 10px;" value="{{ old('nombre') }}" required placeholder="Ej: Creatina Monohidrato 300g">
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="modal_categoria_id" class="form-label fw-bold small text-uppercase text-muted">Categoría</label>
+                                                    <select name="categoria_id" id="modal_categoria_id" class="form-select" style="border-radius: 10px;" required onchange="toggleModalNuevaCategoriaInput()">
+                                                        <option value="" disabled selected>Seleccionar...</option>
+                                                        @foreach($categorias as $cat)
+                                                            <option value="{{ $cat->id }}" {{ old('categoria_id') == $cat->id ? 'selected' : '' }}>
+                                                                {{ $cat->nombre }}
+                                                            </option>
+                                                        @endforeach
+                                                        <option value="nueva" class="text-danger fw-bold">+ Agregar otra distinta...</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="col-md-6 mb-3">
+                                                    <label for="modal_precio" class="form-label fw-bold small text-uppercase text-muted">Precio ($ ARS)</label>
+                                                    <input type="number" step="0.01" name="precio" id="modal_precio" class="form-control" style="border-radius: 10px;" value="{{ old('precio') }}" required placeholder="Ej: 25000">
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3 d-none" id="modal_contenedor_nueva_categoria">
+                                                <label for="modal_nueva_categoria" class="form-label fw-bold small text-uppercase text-danger">Nombre de la nueva categoría</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-danger text-white border-0" style="border-radius: 10px 0 0 10px;"><i class="bi bi-tag-fill"></i></span>
+                                                    <input type="text" name="nueva_categoria" id="modal_nueva_categoria" class="form-control" style="border-radius: 0 10px 10px 0;" placeholder="Ej: Aminoácidos">
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label for="modal_descripcion" class="form-label fw-bold small text-uppercase text-muted">Descripción</label>
+                                                <textarea name="descripcion" id="modal_descripcion" rows="3" class="form-control" style="border-radius: 10px;" placeholder="Detalles del producto...">{{ old('descripcion') }}</textarea>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-3 mb-3">
+                                                    <label for="modal_stock" class="form-label fw-bold small text-uppercase text-muted">Stock Disponible</label>
+                                                    <input type="number" name="stock" id="modal_stock" class="form-control" style="border-radius: 10px;" value="{{ old('stock', 0) }}" min="0" required>
+                                                </div>
+
+                                                <div class="col-md-3 mb-3 d-flex align-items-end">
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input" type="checkbox" name="es_combo" id="modal_es_combo" value="1" {{ old('es_combo') ? 'checked' : '' }} onchange="toggleModalComboProductsInput()">
+                                                        <label class="form-check-label fw-bold small text-uppercase text-muted" for="modal_es_combo">
+                                                            ¿Es un Combo?
+                                                        </label>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-md-3 mb-3 d-flex align-items-end">
+                                                <div class="col-md-3 mb-3 d-flex align-items-end">
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input" type="checkbox" name="activo" id="modal_activo" value="1" {{ old('activo', true) ? 'checked' : '' }}>
+                                                        <label class="form-check-label fw-bold small text-uppercase text-muted" for="modal_activo">
+                                                            ¿Activo?
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3 d-none" id="modal_contenedor_productos_combo">
+                                                <label class="form-label fw-bold small text-uppercase text-danger">Productos incluidos en el Combo</label>
+                                                <div class="border p-3 rounded-3 bg-light" style="max-height: 200px; overflow-y: auto; border-radius: 10px;">
+                                                    @forelse($productos as $p)
+                                                        <div class="form-check mb-2">
+                                                            <input class="form-check-input" type="checkbox" name="productos_combo[]" value="{{ $p->id }}" id="modal_p_combo_{{ $p->id }}">
+                                                            <label class="form-check-label small" for="modal_p_combo_{{ $p->id }}">
+                                                                {{ $p->nombre }} - ${{ number_format($p->precio, 0, ',', '.') }}
+                                                            </label>
+                                                        </div>
+                                                    @empty
+                                                        <p class="text-muted small mb-0">No hay otros productos para asociar al combo.</p>
+                                                    @endforelse
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-4">
+                                                <label for="modal_imagen" class="form-label fw-bold small text-uppercase text-muted">Imagen del Producto (.png, .jpg, .webp)</label>
+                                                <input type="file" name="imagen" id="modal_imagen" class="form-control" style="border-radius: 10px;">
+                                            </div>
+
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold text-uppercase shadow-sm">Registrar Alta</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="dashboard-card shadow-sm">
@@ -113,7 +229,7 @@
                                             <th>Precio</th>
                                             <th>Stock</th>
                                             <th>Combo</th>
-                                            <th>Destacado</th>
+                                            <th>Activo</th>
                                             <th class="text-end">Acciones</th>
                                         </tr>
                                     </thead>
@@ -149,10 +265,10 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if($prod->destacado)
-                                                        <span class="badge bg-warning text-dark">Destacado</span>
+                                                    @if($prod->activo)
+                                                        <span class="badge bg-success">Sí</span>
                                                     @else
-                                                        <span class="text-muted small">-</span>
+                                                        <span class="badge bg-danger">No</span>
                                                     @endif
                                                 </td>
                                                 <td class="text-end">
@@ -832,6 +948,42 @@
                     confirmInput.addEventListener('keyup', validatePassword);
                 }
             });
+        });
+
+        // Funciones para el Modal de Producto
+        function toggleModalNuevaCategoriaInput() {
+            const select = document.getElementById('modal_categoria_id');
+            const contenedor = document.getElementById('modal_contenedor_nueva_categoria');
+            const input = document.getElementById('modal_nueva_categoria');
+
+            if (select && select.value === 'nueva') {
+                contenedor.classList.remove('d-none');
+                input.required = true;
+                input.focus();
+            } else if (contenedor && input) {
+                contenedor.classList.add('d-none');
+                input.required = false;
+                input.value = '';
+            }
+        }
+
+        function toggleModalComboProductsInput() {
+            const esCombo = document.getElementById('modal_es_combo');
+            const contenedor = document.getElementById('modal_contenedor_productos_combo');
+
+            if (esCombo && esCombo.checked) {
+                contenedor.classList.remove('d-none');
+            } else if (contenedor) {
+                contenedor.classList.add('d-none');
+                const checkboxes = contenedor.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = false);
+            }
+        }
+
+        // Inicializar el estado de los inputs dinámicos en el modal cuando se muestra
+        document.getElementById('crearProductoModal')?.addEventListener('show.bs.modal', function () {
+            toggleModalNuevaCategoriaInput();
+            toggleModalComboProductsInput();
         });
     </script>
 </body>

@@ -227,7 +227,7 @@
                         <h2 class="login-form-title">CREAR CUENTA</h2>
                         <p class="login-form-copy">Completa tus datos para registrarte en la tienda.</p>
 
-                        <form action="{{ route('register.post') }}" method="POST">
+                        <form id="registerForm" action="{{ route('register.post') }}" method="POST">
                             @csrf
 
                             <div class="section-divider">Datos de cuenta</div>
@@ -240,7 +240,8 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <label for="email" class="login-label">Email</label>
-                                    <input id="email" name="email" type="email" class="form-control login-input @error('email') is-invalid @enderror" placeholder="ejemplo@energy.com.ar" value="{{ old('email') }}" required>
+                                    <input id="email" name="email" type="email" class="form-control login-input @error('email') is-invalid @enderror" placeholder="ejemplo@energy.com.ar" value="{{ old('email') }}" required list="savedEmails" autocomplete="email">
+                                    <datalist id="savedEmails"></datalist>
                                     @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                             </div>
@@ -307,5 +308,35 @@
     @include('partials.footer')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Cargar correos guardados en la computadora
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedEmails = JSON.parse(localStorage.getItem('energy_saved_emails')) || [];
+            const datalist = document.getElementById('savedEmails');
+            savedEmails.forEach(email => {
+                const option = document.createElement('option');
+                option.value = email;
+                datalist.appendChild(option);
+            });
+        });
+
+        // Evento que analiza el envío del formulario
+        const emailInput = document.getElementById('email');
+        const registerForm = document.getElementById('registerForm');
+        
+        if (registerForm && emailInput) {
+            registerForm.addEventListener('submit', function (event) {
+                // Guardar el correo en localStorage para próximas visitas
+                const currentEmail = emailInput.value.trim().toLowerCase();
+                if (currentEmail) {
+                    let savedEmails = JSON.parse(localStorage.getItem('energy_saved_emails')) || [];
+                    if (!savedEmails.includes(currentEmail)) {
+                        savedEmails.push(currentEmail);
+                        localStorage.setItem('energy_saved_emails', JSON.stringify(savedEmails));
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 </html>

@@ -13,6 +13,10 @@ class CarritoController extends Controller
      */
     public function index()
     {
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.index')->with('error', 'Los administradores no tienen un carrito de compras.');
+        }
+
         $carritoFormateado = collect([]);
 
         // Comprobamos la autenticación de forma segura
@@ -64,7 +68,7 @@ class CarritoController extends Controller
     /**
      * Vacía por completo el carrito (En LocalStorage y en MariaDB)
      */
-    public function vaciar()
+    public function vaciar(Request $request)
     {
         if (Auth::check()) {
             $user = Auth::user();
@@ -76,11 +80,18 @@ class CarritoController extends Controller
             }
         }
 
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Carrito vaciado correctamente.']);
+        }
+
         return back()->with('success', 'Carrito vaciado correctamente de ENERGY.');
     }
 
     public function agregar(Request $request, $id)
     {
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return back()->with('error', 'Los administradores no pueden agregar productos al carrito.');
+        }
         return back()->with('success', 'Producto agregado al carrito de ENERGY.');
     }
 
@@ -102,21 +113,40 @@ class CarritoController extends Controller
 
     public function confirmar()
     {
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.index')->with('error', 'Los administradores no pueden realizar compras.');
+        }
         return view('compra-confirmar'); 
     }
 
     public function guardarCompra(Request $request)
     {
-        $request->validate([
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.index')->with('error', 'Los administradores no pueden realizar compras.');
+        }
+
+        // Reglas base
+        $rules = [
             'cliente_nombre' => 'required|string|max:255',
             'cliente_telefono' => 'required|string|max:50',
             'cliente_email' => 'required|email|max:255',
             'direccion_entrega' => 'required|string',
             'metodo_pago' => 'required|in:transferencia,mercado_pago,whatsapp',
-            'comprobante' => 'nullable|file|mimes:pdf|max:4096',
             'carrito_data' => 'required|json',
             'mp_payment_id' => 'nullable|string|max:100',
-        ]);
+        ];
+
+        // Solo validar comprobante PDF si el método es transferencia
+        if ($request->metodo_pago === 'transferencia') {
+            $rules['comprobante'] = 'nullable|file|mimes:pdf|max:4096';
+        }
+
+        $request->validate($rules);
+
+        // Si no es transferencia, eliminar cualquier archivo de comprobante que se haya enviado
+        if ($request->metodo_pago !== 'transferencia' && $request->hasFile('comprobante')) {
+            $request->request->remove('comprobante');
+        }
 
         $cartRaw = json_decode($request->carrito_data, true);
         if (empty($cartRaw)) {
@@ -220,7 +250,8 @@ class CarritoController extends Controller
             $user = Auth::user();
             $direccionExistente = \App\Models\Direccion::where('user_id', $user->id)
                 ->where('direccion_entrega', $request->direccion_entrega)
-                ->exists();
+                ->first();
+                
             if (!$direccionExistente) {
                 \App\Models\Direccion::create([
                     'user_id' => $user->id,
@@ -229,6 +260,13 @@ class CarritoController extends Controller
                     'cliente_email' => $request->cliente_email,
                     'direccion_entrega' => $request->direccion_entrega,
                 ]);
+            } else {
+                // Si la dirección existe pero no tiene teléfono (ej. creada al registrarse), lo actualizamos
+                if (empty($direccionExistente->cliente_telefono) || $direccionExistente->cliente_telefono == '') {
+                    $direccionExistente->update([
+                        'cliente_telefono' => $request->cliente_telefono
+                    ]);
+                }
             }
         }
 
@@ -278,7 +316,10 @@ class CarritoController extends Controller
             }
         }
 
-        return redirect()->route('mis-compras')->with('success', '¡Pedido registrado con éxito en ENERGY! Tu compra ha sido procesada.');
+        return redirect()->route('mis-compras')->with([
+            'success' => '¡Pedido registrado con éxito en ENERGY! Tu compra ha sido procesada.',
+            'clear_cart' => true
+        ]);
     }
 
     /**
@@ -310,6 +351,12 @@ class CarritoController extends Controller
         ]);
 
         if (Auth::check()) {
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Los administradores no pueden agregar productos al carrito.'
+                ], 403);
+            }
             $user = Auth::user();
             $cantidad = intval($request->input('cantidad', 1));
             
@@ -350,6 +397,12 @@ class CarritoController extends Controller
         ]);
 
         if (Auth::check()) {
+            if (Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Los administradores no pueden modificar el carrito.'
+                ], 403);
+            }
             $user = Auth::user();
             $producto = \App\Models\Producto::find($request->producto_id);
 
