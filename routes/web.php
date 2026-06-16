@@ -72,6 +72,9 @@ Route::get('/registro', function () {
 
 Route::post('/registro', [RegisterController::class, 'register'])->name('register.post');
 
+// Ruta AJAX para verificar si el email ya existe (validación en tiempo real)
+Route::post('/verificar-email', [RegisterController::class, 'verificarEmail'])->name('verificar.email');
+
 // --- RUTAS PROTEGIDAS (SÓLO para usuarios logueados) ---
 Route::middleware(['auth'])->group(function () {
     // Ver el carrito de compras (pasa por el controlador)
@@ -104,7 +107,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/usuarios/guardar', [AdminController::class, 'storeUsuario'])->name('admin.usuarios.store');
         Route::put('/admin/usuarios/{usuario}', [AdminController::class, 'updateUsuario'])->name('admin.usuarios.update');
         Route::post('/admin/usuarios/{usuario}/reset-password', [AdminController::class, 'resetPasswordUsuario'])->name('admin.usuarios.reset-password');
-        Route::delete('/admin/usuarios/{usuario}', [AdminController::class, 'destroyUsuario'])->name('admin.usuarios.destroy');
+        Route::match(['delete', 'post'], '/admin/usuarios/{usuario}', [AdminController::class, 'destroyUsuario'])->name('admin.usuarios.destroy');
+        Route::match(['patch', 'post'], '/admin/usuarios/{usuario}/restore', [AdminController::class, 'restoreUsuario'])->name('admin.usuarios.restore');
         
         // Rutas para mensajes de contacto
         Route::patch('/admin/mensajes/{id}/leer', [AdminController::class, 'marcarMensajeLeido'])->name('admin.mensajes.leer');

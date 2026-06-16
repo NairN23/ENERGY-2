@@ -33,13 +33,6 @@
             </a>
         </div>
 
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4 p-3" role="alert" style="border-radius: 12px;">
-                <i class="bi bi-check-circle-fill me-2"></i> <strong>{{ session('success') }}</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
         <div class="detail-card shadow-sm">
             <div class="row align-items-center border-bottom pb-3 mb-4">
                 <div class="col-md-6 col-12 mb-2 mb-md-0">

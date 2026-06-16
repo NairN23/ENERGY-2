@@ -316,7 +316,7 @@
                             </div>
 
                             <div class="d-flex justify-content-end mb-3">
-                                <a href="#" class="login-link">¿La olvidaste?</a>
+                                <a href="#" class="login-link" onclick="event.preventDefault(); alert('Esta funcionalidad está en construcción. Pronto podrás recuperar tu contraseña.');">¿La olvidaste?</a>
                             </div>
 
                             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3 mb-4">

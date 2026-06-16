@@ -12,6 +12,7 @@ use App\Models\Pedido;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
@@ -30,15 +31,20 @@ class AdminController extends Controller
             $roleFilter = 'todos';
         }
 
+        // Regla de negocio: si no hay stock, el producto debe quedar inactivo.
+        Producto::where('stock', '<=', 0)
+            ->where('activo', true)
+            ->update(['activo' => false]);
+
         // 1. Traemos los suplementos con su categoría de MariaDB
         $productos = Producto::with('categoria')->get();
         $categorias = Categoria::all();
 
-        // 2. Traemos las compras/pedidos
-        $pedidos = Pedido::with('user')->latest()->get();
+        // 2. Traemos las compras/pedidos con detalles para renderizar el modal en dashboard
+        $pedidos = Pedido::with(['user', 'detalles.producto.categoria'])->latest()->get();
 
-        // 3. Traemos los usuarios activos y opcionalmente filtrados por rol.
-        $usuariosQuery = User::query()->with('roleRelation')->latest();
+        // 3. Traemos los usuarios (activos e inactivos por soft delete) y opcionalmente filtrados por rol.
+        $usuariosQuery = User::withTrashed()->with('roleRelation')->latest();
 
         if ($roleFilter !== 'todos') {
             $roleId = $roleIds[$roleFilter] ?? null;
@@ -122,7 +128,15 @@ class AdminController extends Controller
      */
     public function storeUsuario(Request $request)
     {
-        $validated = $this->validateUsuario($request);
+        $validator = Validator::make($request->all(), $this->usuarioValidationRules());
+
+        if ($validator->fails()) {
+            return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+                ->withErrors($validator, 'createUser')
+                ->withInput();
+        }
+
+        $validated = $validator->validated();
 
         User::create($this->buildUsuarioPayload($validated));
 
@@ -133,9 +147,23 @@ class AdminController extends Controller
     /**
      * Actualiza los datos básicos o la contraseña de un usuario.
      */
-    public function updateUsuario(Request $request, User $usuario)
+    public function updateUsuario(Request $request, int $usuario)
     {
-        $validated = $this->validateUsuario($request, $usuario);
+        $usuario = User::withTrashed()->findOrFail($usuario);
+
+        if ($usuario->trashed()) {
+            return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+                ->withErrors(['role' => 'No podés editar un usuario inactivo. Primero debés activarlo.']);
+        }
+
+        $validator = Validator::make($request->all(), $this->usuarioValidationRules($usuario));
+
+        if ($validator->fails()) {
+            return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+                ->withErrors($validator, 'updateUser');
+        }
+
+        $validated = $validator->validated();
 
         if ($usuario->is(auth()->user()) && $validated['role'] !== User::ROLE_ADMIN) {
             return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
@@ -156,8 +184,15 @@ class AdminController extends Controller
     /**
      * Genera una contraseña temporal para un usuario concreto.
      */
-    public function resetPasswordUsuario(Request $request, User $usuario)
+    public function resetPasswordUsuario(Request $request, int $usuario)
     {
+        $usuario = User::withTrashed()->findOrFail($usuario);
+
+        if ($usuario->trashed()) {
+            return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+                ->withErrors(['delete' => 'No podés resetear la clave de un usuario inactivo.']);
+        }
+
         $passwordTemporal = Str::random(12);
 
         $usuario->update([
@@ -176,8 +211,15 @@ class AdminController extends Controller
     /**
      * Elimina usuarios por soft delete desde el panel.
      */
-    public function destroyUsuario(Request $request, User $usuario)
+    public function destroyUsuario(Request $request, int $usuario)
     {
+        $usuario = User::withTrashed()->findOrFail($usuario);
+
+        if ($usuario->trashed()) {
+            return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+                ->withErrors(['delete' => 'El usuario seleccionado ya se encuentra inactivo.']);
+        }
+
         if ($usuario->is(auth()->user())) {
             return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
                 ->withErrors(['delete' => 'No podés eliminar tu propio usuario desde el panel.']);
@@ -195,6 +237,44 @@ class AdminController extends Controller
 
         return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
             ->with('success', 'Usuario eliminado correctamente.');
+    }
+
+    /**
+     * Restaura un usuario eliminado por soft delete.
+     */
+    public function restoreUsuario(Request $request, int $usuario)
+    {
+        $target = User::withTrashed()->findOrFail($usuario);
+
+        if (! $target->trashed()) {
+            return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+                ->with('success', 'El usuario ya se encontraba activo.');
+        }
+
+        $emailOriginal = $target->deleted_email_original;
+        $target->restore();
+
+        $mensaje = 'Usuario reactivado correctamente.';
+
+        if ($emailOriginal) {
+            $emailOcupado = User::query()
+                ->where('id', '!=', $target->id)
+                ->where('email', $emailOriginal)
+                ->whereNull('deleted_at')
+                ->exists();
+
+            if (! $emailOcupado) {
+                $target->forceFill([
+                    'email' => $emailOriginal,
+                    'deleted_email_original' => null,
+                ])->save();
+            } else {
+                $mensaje = 'Usuario reactivado. El email original ya está en uso por otra cuenta activa.';
+            }
+        }
+
+        return redirect()->route('admin.index', $this->dashboardRedirectParams($request))
+            ->with('success', $mensaje);
     }
 
     /**
@@ -233,6 +313,32 @@ class AdminController extends Controller
         } elseif ($action === 'decrement' && $producto->stock > 0) {
             $producto->decrement('stock', 1);
         }
+
+        $producto->refresh();
+        $producto->update(['activo' => $producto->stock > 0]);
+
+        // Si cambia el stock de cualquier producto, sincronizamos el estado de combos por stock de componentes.
+        $combos = Producto::where('es_combo', true)->get();
+        foreach ($combos as $combo) {
+            $componentes = is_array($combo->productos_combo) ? $combo->productos_combo : [];
+
+            if (empty($componentes)) {
+                continue;
+            }
+
+            $faltantes = Producto::whereIn('id', $componentes)
+                ->where('stock', '<=', 0)
+                ->exists();
+
+            if ($faltantes && $combo->activo) {
+                $combo->update(['activo' => false]);
+            }
+
+            if (! $faltantes && $combo->stock > 0 && ! $combo->activo) {
+                $combo->update(['activo' => true]);
+            }
+        }
+
         return redirect()->back()->with('success', "Stock de '{$producto->nombre}' actualizado con éxito.");
     }
 
@@ -338,18 +444,18 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'El logo ya está en su modo por defecto.');
     }
 
-    private function validateUsuario(Request $request, ?User $usuario = null): array
+    private function usuarioValidationRules(?User $usuario = null): array
     {
         $passwordRules = $usuario
             ? ['nullable', 'string', 'min:8', 'confirmed']
             : ['required', 'string', 'min:8', 'confirmed'];
 
-        return $request->validate([
+        return [
             'name' => ['required', 'string', 'min:3', 'max:255'],
             'email' => [
                 'required',
                 'string',
-                'email:rfc,dns',
+                'email:rfc',
                 'max:255',
                 Rule::unique('users', 'email')
                     ->ignore($usuario?->id)
@@ -357,7 +463,7 @@ class AdminController extends Controller
             ],
             'role' => ['required', Rule::in(array_keys(Role::options()))],
             'password' => $passwordRules,
-        ]);
+        ];
     }
 
     private function buildUsuarioPayload(array $validated): array

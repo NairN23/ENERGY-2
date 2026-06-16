@@ -120,13 +120,6 @@
                         @enderror
                     </div>
                     
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-                            <i class="bi bi-check-circle-fill"></i> {{ session('success') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                    @endif
-
                     <button type="submit" class="btn btn-enviar w-100">ENVIAR CONSULTA</button>
                 </form>
             </div>
@@ -134,6 +127,8 @@
     </div>
 
     @include('partials.footer')
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

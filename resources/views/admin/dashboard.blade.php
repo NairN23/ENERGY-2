@@ -15,6 +15,45 @@
         .sidebar .nav-link:hover, .sidebar .nav-link.active { color: #fff; background: #ff0000; }
         .dashboard-card { background: white; border-radius: 20px; border: 1px solid #eee; padding: 25px; }
         .product-thumb { width: 45px; height: 45px; object-fit: contain; background: #f4f4f4; border-radius: 8px; }
+
+        /* En móvil (cuando el sidebar va arriba), menú en 2 columnas */
+        @media (max-width: 767.98px) {
+            .sidebar {
+                min-height: auto;
+            }
+
+            .sidebar #adminTab {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.5rem;
+            }
+
+            .sidebar #adminTab .nav-item {
+                width: 100%;
+                margin-top: 0 !important;
+            }
+
+            .sidebar #adminTab .nav-item .nav-link {
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center !important;
+                padding: 10px 12px;
+                font-size: 0.8rem;
+            }
+
+            .sidebar #adminTab .nav-item.mt-4 {
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* En móviles muy angostos, una sola columna para evitar cortes */
+        @media (max-width: 575.98px) {
+            .sidebar #adminTab {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -76,19 +115,19 @@
             <div class="col-md-9 col-lg-10 p-4 p-md-5">
                 
                 @if(session('success'))
-                    <div class="alert alert-success border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                    <div class="alert alert-success border-0 shadow-sm mb-4 dashboard-flash-alert" style="border-radius: 12px;">
                         <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
                     </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="alert alert-danger border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                    <div class="alert alert-danger border-0 shadow-sm mb-4 dashboard-flash-alert" style="border-radius: 12px;">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
                     </div>
                 @endif
 
                 @if(session('generated_password'))
-                    <div class="alert alert-warning border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                    <div class="alert alert-warning border-0 shadow-sm mb-4 dashboard-flash-alert" style="border-radius: 12px;">
                         <div class="fw-bold mb-1"><i class="bi bi-key-fill me-2"></i> Contraseña temporal generada</div>
                         <div class="small text-dark">
                             Usuario: {{ session('generated_password.name') }} ({{ session('generated_password.email') }})<br>
@@ -176,7 +215,6 @@
                                                     </div>
                                                 </div>
 
-                                                <div class="col-md-3 mb-3 d-flex align-items-end">
                                                 <div class="col-md-3 mb-3 d-flex align-items-end">
                                                     <div class="form-check mb-2">
                                                         <input class="form-check-input" type="checkbox" name="activo" id="modal_activo" value="1" {{ old('activo', true) ? 'checked' : '' }}>
@@ -273,7 +311,15 @@
                                                 </td>
                                                 <td class="text-end">
                                                     <div class="d-inline-flex gap-2">
-                                                        <a href="{{ route('productos.edit', $prod->id) }}" class="btn btn-sm btn-outline-dark px-3" style="border-radius: 8px;">Editar</a>
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-sm btn-outline-dark px-3"
+                                                            style="border-radius: 8px;"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#editarProductoModal{{ $prod->id }}"
+                                                        >
+                                                            Editar
+                                                        </button>
                                                         <form action="{{ route('productos.destroy', $prod->id) }}" method="POST" onsubmit="return confirm('¿Seguro querés eliminar este producto?');" style="display:inline;">
                                                             @csrf 
                                                             @method('DELETE')
@@ -282,6 +328,112 @@
                                                     </div>
                                                 </td>
                                             </tr>
+
+                                            <div class="modal fade" id="editarProductoModal{{ $prod->id }}" tabindex="-1" aria-labelledby="editarProductoModalLabel{{ $prod->id }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                                    <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden;">
+                                                        <div class="modal-header bg-dark text-white border-0">
+                                                            <div>
+                                                                <h5 class="modal-title fw-bold text-uppercase" id="editarProductoModalLabel{{ $prod->id }}">Editar Producto</h5>
+                                                                <span class="small text-white-50">Actualizá los datos de {{ $prod->nombre }} sin salir del panel.</span>
+                                                            </div>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body p-4">
+                                                            <form action="{{ route('productos.update', $prod->id) }}" method="POST" enctype="multipart/form-data">
+                                                                @csrf
+                                                                @method('PUT')
+
+                                                                <div class="mb-3">
+                                                                    <label class="form-label fw-bold small text-uppercase text-muted">Nombre del Suplemento</label>
+                                                                    <input type="text" name="nombre" class="form-control" style="border-radius: 10px;" value="{{ $prod->nombre }}" required>
+                                                                </div>
+
+                                                                <div class="row">
+                                                                    <div class="col-md-6 mb-3">
+                                                                        <label class="form-label fw-bold small text-uppercase text-muted">Categoría</label>
+                                                                        <select name="categoria_id" id="edit_categoria_id_{{ $prod->id }}" class="form-select" style="border-radius: 10px;" required onchange="toggleEditNuevaCategoriaInput({{ $prod->id }})">
+                                                                            @foreach($categorias as $cat)
+                                                                                <option value="{{ $cat->id }}" {{ $prod->categoria_id == $cat->id ? 'selected' : '' }}>
+                                                                                    {{ $cat->nombre }}
+                                                                                </option>
+                                                                            @endforeach
+                                                                            <option value="nueva" class="text-danger fw-bold">+ Agregar otra distinta...</option>
+                                                                        </select>
+                                                                    </div>
+
+                                                                    <div class="col-md-6 mb-3">
+                                                                        <label class="form-label fw-bold small text-uppercase text-muted">Precio ($ ARS)</label>
+                                                                        <input type="number" step="0.01" name="precio" class="form-control" style="border-radius: 10px;" value="{{ $prod->precio }}" required>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="mb-3 d-none" id="edit_contenedor_nueva_categoria_{{ $prod->id }}">
+                                                                    <label class="form-label fw-bold small text-uppercase text-danger">Nombre de la nueva categoría</label>
+                                                                    <input type="text" name="nueva_categoria" id="edit_nueva_categoria_{{ $prod->id }}" class="form-control" style="border-radius: 10px;" placeholder="Ej: Aminoácidos">
+                                                                </div>
+
+                                                                <div class="mb-3">
+                                                                    <label class="form-label fw-bold small text-uppercase text-muted">Descripción</label>
+                                                                    <textarea name="descripcion" rows="3" class="form-control" style="border-radius: 10px;">{{ $prod->descripcion }}</textarea>
+                                                                </div>
+
+                                                                <div class="row">
+                                                                    <div class="col-md-3 mb-3">
+                                                                        <label class="form-label fw-bold small text-uppercase text-muted">Stock Disponible</label>
+                                                                        <input type="number" name="stock" class="form-control" style="border-radius: 10px;" value="{{ $prod->stock }}" min="0" required>
+                                                                    </div>
+
+                                                                    <div class="col-md-3 mb-3 d-flex align-items-end">
+                                                                        <div class="form-check mb-2">
+                                                                            <input class="form-check-input" type="checkbox" name="es_combo" id="edit_es_combo_{{ $prod->id }}" value="1" {{ $prod->es_combo ? 'checked' : '' }} onchange="toggleEditComboProductsInput({{ $prod->id }})">
+                                                                            <label class="form-check-label fw-bold small text-uppercase text-muted" for="edit_es_combo_{{ $prod->id }}">¿Es un Combo?</label>
+                                                                        </div>
+                                                                    </div>
+
+                                                                    <div class="col-md-3 mb-3 d-flex align-items-end">
+                                                                        <div class="form-check mb-2">
+                                                                            <input class="form-check-input" type="checkbox" name="activo" id="edit_activo_{{ $prod->id }}" value="1" {{ $prod->activo ? 'checked' : '' }}>
+                                                                            <label class="form-check-label fw-bold small text-uppercase text-muted" for="edit_activo_{{ $prod->id }}">¿Activo?</label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="mb-3 d-none" id="edit_contenedor_productos_combo_{{ $prod->id }}">
+                                                                    <label class="form-label fw-bold small text-uppercase text-danger">Productos incluidos en el Combo</label>
+                                                                    <div class="border p-3 rounded-3 bg-light" style="max-height: 200px; overflow-y: auto; border-radius: 10px;">
+                                                                        @foreach($productos as $p)
+                                                                            @if($p->id !== $prod->id)
+                                                                                <div class="form-check mb-2">
+                                                                                    <input class="form-check-input" type="checkbox" name="productos_combo[]" value="{{ $p->id }}" id="edit_p_combo_{{ $prod->id }}_{{ $p->id }}" {{ is_array($prod->productos_combo) && in_array($p->id, $prod->productos_combo) ? 'checked' : '' }}>
+                                                                                    <label class="form-check-label small" for="edit_p_combo_{{ $prod->id }}_{{ $p->id }}">
+                                                                                        {{ $p->nombre }} - ${{ number_format($p->precio, 0, ',', '.') }}
+                                                                                    </label>
+                                                                                </div>
+                                                                            @endif
+                                                                        @endforeach
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="mb-4">
+                                                                    <label class="form-label fw-bold small text-uppercase text-muted">Imagen del Producto (.png, .jpg, .webp)</label>
+                                                                    <input type="file" name="imagen" class="form-control" style="border-radius: 10px;">
+                                                                    @if($prod->imagen)
+                                                                        <div class="mt-2 small text-muted">
+                                                                            Imagen actual: <a href="{{ $prod->imagen }}" target="_blank" class="text-danger fw-bold">Ver archivo cargado</a>
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
+
+                                                                <div class="d-flex justify-content-end gap-2">
+                                                                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                                                                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold text-uppercase shadow-sm">Guardar cambios</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @empty
                                             <tr><td colspan="7" class="text-center py-4 text-muted small">No hay suplementos registrados.</td></tr>
                                         @endforelse
@@ -312,8 +464,8 @@
                                         @forelse($pedidos as $pedido)
                                             <tr>
                                                 <td class="fw-bold text-danger">#{{ $pedido->id }}</td>
-                                                <td class="fw-bold" style="font-size: 0.85rem;">{{ $pedido->user->name ?? 'Usuario' }}</td>
-                                                <td class="small text-muted">{{ $pedido->user->email ?? 'S/D' }}</td>
+                                                <td class="fw-bold" style="font-size: 0.85rem;">{{ $pedido->cliente_nombre ?? ($pedido->user->name ?? 'Usuario') }}</td>
+                                                <td class="small text-muted">{{ $pedido->cliente_email ?? ($pedido->user->email ?? 'S/D') }}</td>
                                                 <td class="fw-bold text-dark">${{ number_format($pedido->total, 2) }}</td>
                                                 <td>
                                                     <span class="badge bg-{{ $pedido->estado === 'entregado' ? 'success' : ($pedido->estado === 'cancelado' ? 'danger' : 'warning') }} text-uppercase" style="font-size: 0.65rem;">
@@ -322,7 +474,14 @@
                                                 </td>
                                                 <td class="small">{{ $pedido->created_at->format('d/m/Y') }}</td>
                                                 <td>
-                                                    <a href="{{ route('admin.pedidos.show', $pedido->id) }}" class="btn btn-sm btn-outline-primary">Ver</a>
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm btn-outline-primary"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#pedidoDetalleModal{{ $pedido->id }}"
+                                                    >
+                                                        Ver
+                                                    </button>
                                                 </td>
                                             </tr>
                                         @empty
@@ -331,6 +490,115 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            @foreach($pedidos as $pedido)
+                                <div class="modal fade" id="pedidoDetalleModal{{ $pedido->id }}" tabindex="-1" aria-labelledby="pedidoDetalleModalLabel{{ $pedido->id }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                                        <div class="modal-content border-0" style="border-radius: 18px; overflow: hidden;">
+                                            <div class="modal-header bg-dark text-white border-0">
+                                                <div>
+                                                    <h5 class="modal-title fw-bold text-uppercase" id="pedidoDetalleModalLabel{{ $pedido->id }}">Detalle Pedido #{{ $pedido->id }}</h5>
+                                                    <span class="small text-white-50">{{ $pedido->created_at->format('d/m/Y H:i') }}</span>
+                                                </div>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body p-4">
+                                                <div class="row g-4">
+                                                    <div class="col-lg-8">
+                                                        <h6 class="fw-bold text-uppercase text-muted small mb-3">Productos solicitados</h6>
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm align-middle">
+                                                                <thead>
+                                                                    <tr class="text-uppercase text-muted" style="font-size: 0.68rem;">
+                                                                        <th>Producto</th>
+                                                                        <th class="text-center">Cant</th>
+                                                                        <th class="text-end">P. Unitario</th>
+                                                                        <th class="text-end">Subtotal</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @forelse($pedido->detalles as $detalle)
+                                                                        <tr>
+                                                                            <td>
+                                                                                <div class="d-flex align-items-center gap-2">
+                                                                                    <img
+                                                                                        src="{{ $detalle->producto->imagen ?? '/images/productos/default.png' }}"
+                                                                                        alt="{{ $detalle->producto->nombre ?? 'Producto' }}"
+                                                                                        style="width: 38px; height: 38px; object-fit: contain; background: #f8f9fa; border-radius: 6px;"
+                                                                                    >
+                                                                                    <div>
+                                                                                        <span class="fw-bold d-block" style="font-size: 0.82rem;">{{ $detalle->producto->nombre ?? 'Producto descatalogado' }}</span>
+                                                                                        <span class="text-muted small">{{ $detalle->producto->categoria->nombre ?? 'Suplemento' }}</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="text-center fw-bold">{{ $detalle->cantidad }}</td>
+                                                                            <td class="text-end">${{ number_format($detalle->precio_unitario, 2, ',', '.') }}</td>
+                                                                            <td class="text-end fw-bold text-danger">${{ number_format($detalle->subtotal, 2, ',', '.') }}</td>
+                                                                        </tr>
+                                                                    @empty
+                                                                        <tr>
+                                                                            <td colspan="4" class="text-center text-muted small py-3">Este pedido no tiene detalles disponibles.</td>
+                                                                        </tr>
+                                                                    @endforelse
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-lg-4 border-start">
+                                                        <div class="ps-lg-3">
+                                                            <h6 class="fw-bold text-uppercase text-muted small mb-3">Datos del cliente</h6>
+                                                            <p class="small mb-1"><strong>Nombre:</strong> {{ $pedido->cliente_nombre ?? ($pedido->user->name ?? 'Invitado') }}</p>
+                                                            <p class="small mb-1"><strong>Teléfono:</strong> {{ $pedido->cliente_telefono ?? 'Sin registrar' }}</p>
+                                                            <p class="small mb-1"><strong>Email:</strong> {{ $pedido->cliente_email ?? ($pedido->user->email ?? 'Sin registrar') }}</p>
+                                                            <p class="small mb-3"><strong>Dirección:</strong> {{ $pedido->direccion_entrega ?? 'Sin registrar' }}</p>
+
+                                                            <h6 class="fw-bold text-uppercase text-muted small mb-2">Método de pago</h6>
+                                                            <p class="small mb-3">
+                                                                @if($pedido->metodo_pago === 'mercado_pago')
+                                                                    <span class="badge bg-info text-white">Mercado Pago</span>
+                                                                @elseif($pedido->metodo_pago === 'whatsapp')
+                                                                    <span class="badge bg-success text-white">WhatsApp</span>
+                                                                @else
+                                                                    <span class="badge bg-primary text-white">Transferencia</span>
+                                                                @endif
+                                                            </p>
+
+                                                            @if($pedido->comprobante)
+                                                                <a href="{{ $pedido->comprobante }}" target="_blank" class="btn btn-sm btn-outline-danger rounded-pill mb-3">
+                                                                    Ver / Descargar comprobante
+                                                                </a>
+                                                            @endif
+
+                                                            <div class="d-flex justify-content-between align-items-center p-3 bg-light rounded-3 mb-3">
+                                                                <span class="small text-uppercase text-muted fw-bold">Total</span>
+                                                                <h5 class="m-0 fw-bold">${{ number_format($pedido->total, 2, ',', '.') }}</h5>
+                                                            </div>
+
+                                                            <form action="{{ route('admin.pedidos.estado', $pedido->id) }}" method="POST">
+                                                                @csrf
+                                                                @method('PATCH')
+                                                                <div class="mb-2">
+                                                                    <label class="form-label small text-uppercase text-muted fw-bold">Estado del pedido</label>
+                                                                    <select name="estado" class="form-select form-select-sm" style="border-radius: 10px;">
+                                                                        <option value="pendiente" {{ $pedido->estado === 'pendiente' ? 'selected' : '' }}>Pendiente</option>
+                                                                        <option value="confirmado" {{ $pedido->estado === 'confirmado' ? 'selected' : '' }}>Confirmado / Pagado</option>
+                                                                        <option value="enviado" {{ $pedido->estado === 'enviado' ? 'selected' : '' }}>Enviado</option>
+                                                                        <option value="entregado" {{ $pedido->estado === 'entregado' ? 'selected' : '' }}>Entregado</option>
+                                                                        <option value="cancelado" {{ $pedido->estado === 'cancelado' ? 'selected' : '' }}>Cancelado</option>
+                                                                    </select>
+                                                                </div>
+                                                                <button type="submit" class="btn btn-danger w-100 rounded-pill">Guardar estado</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
 
@@ -358,9 +626,7 @@
                                                 <td class="small"><a href="mailto:{{ $msj->email }}">{{ $msj->email }}</a></td>
                                                 <td class="small">
                                                     @if($msj->telefono)
-                                                        <a href="https://wa.me/54{{ substr($msj->telefono, -10) }}" target="_blank" class="btn btn-sm btn-success">
-                                                            <i class="bi bi-whatsapp"></i>
-                                                        </a>
+                                                        <span class="fw-semibold text-dark">{{ $msj->telefono }}</span>
                                                     @else
                                                         <span class="text-muted">-</span>
                                                     @endif
@@ -375,17 +641,85 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    @if(!$msj->leido)
-                                                        <form action="{{ route('admin.mensajes.leer', $msj->id) }}" method="POST" style="display:inline;">
-                                                            @csrf
-                                                            @method('PATCH')
-                                                            <button type="submit" class="btn btn-sm btn-outline-info" title="Marcar como leído">
-                                                                <i class="bi bi-check2"></i>
-                                                            </button>
-                                                        </form>
-                                                    @endif
+                                                    <div class="d-inline-flex align-items-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-sm btn-outline-dark"
+                                                            title="Ver detalle"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#mensajeDetalleModal{{ $msj->id }}"
+                                                        >
+                                                            <i class="bi bi-eye"></i>
+                                                        </button>
+
+                                                        @if(!$msj->leido)
+                                                            <form action="{{ route('admin.mensajes.leer', $msj->id) }}" method="POST" style="display:inline;">
+                                                                @csrf
+                                                                @method('PATCH')
+                                                                <button type="submit" class="btn btn-sm btn-outline-info" title="Marcar como leído">
+                                                                    <i class="bi bi-check2"></i>
+                                                                </button>
+                                                            </form>
+                                                        @endif
+                                                    </div>
                                                 </td>
                                             </tr>
+
+                                            <div class="modal fade" id="mensajeDetalleModal{{ $msj->id }}" tabindex="-1" aria-labelledby="mensajeDetalleModalLabel{{ $msj->id }}" aria-hidden="true">
+                                                <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                    <div class="modal-content border-0" style="border-radius: 18px; overflow: hidden;">
+                                                        <div class="modal-header bg-dark text-white border-0">
+                                                            <div>
+                                                                <h5 class="modal-title fw-bold text-uppercase" id="mensajeDetalleModalLabel{{ $msj->id }}">Detalle del Mensaje</h5>
+                                                                <span class="small text-white-50">Consulta recibida desde el formulario de contacto.</span>
+                                                            </div>
+                                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body p-4">
+                                                            <div class="row g-3 mb-3">
+                                                                <div class="col-md-6">
+                                                                    <label class="form-label small text-uppercase text-muted fw-bold">Remitente</label>
+                                                                    <div class="form-control bg-light">{{ $msj->nombre }}</div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <label class="form-label small text-uppercase text-muted fw-bold">Email</label>
+                                                                    <div class="form-control bg-light">{{ $msj->email }}</div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <label class="form-label small text-uppercase text-muted fw-bold">Teléfono</label>
+                                                                    <div class="form-control bg-light">{{ $msj->telefono ?: '-' }}</div>
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <label class="form-label small text-uppercase text-muted fw-bold">Estado</label>
+                                                                    <div class="form-control bg-light">
+                                                                        {{ $msj->leido ? 'Leído' : 'Sin leer' }}
+                                                                    </div>
+                                                                </div>
+                                                                <div class="col-12">
+                                                                    <label class="form-label small text-uppercase text-muted fw-bold">Asunto</label>
+                                                                    <div class="form-control bg-light">{{ $msj->asunto }}</div>
+                                                                </div>
+                                                                <div class="col-12">
+                                                                    <label class="form-label small text-uppercase text-muted fw-bold">Mensaje</label>
+                                                                    <textarea class="form-control bg-light" rows="6" readonly>{{ $msj->contenido }}</textarea>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer border-0 pt-0 px-4 pb-4 d-flex justify-content-end gap-2">
+                                                            @if(!$msj->leido)
+                                                                <form action="{{ route('admin.mensajes.leer', $msj->id) }}" method="POST" class="m-0">
+                                                                    @csrf
+                                                                    @method('PATCH')
+                                                                    <button type="submit" class="btn btn-outline-info rounded-pill px-4">
+                                                                        Marcar como leído
+                                                                    </button>
+                                                                </form>
+                                                            @endif
+                                                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @empty
                                             <tr><td colspan="7" class="text-center py-4 text-muted small">No recibiste consultas de contacto por el momento.</td></tr>
                                         @endforelse
@@ -411,13 +745,34 @@
                                             <option value="{{ $roleValue }}" {{ $roleFilter === $roleValue ? 'selected' : '' }}>{{ $roleLabel }}</option>
                                         @endforeach
                                     </select>
-                                    <button type="submit" class="btn btn-outline-dark rounded-pill px-3">Filtrar</button>
                                 </form>
                                 <button class="btn btn-danger rounded-pill px-4" type="button" data-bs-toggle="collapse" data-bs-target="#crearUsuarioForm" aria-expanded="false" aria-controls="crearUsuarioForm">
                                     Crear Usuario
                                 </button>
                             </div>
                         </div>
+
+                        @if($errors->createUser->any())
+                            <div class="alert alert-danger border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                                <p class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i> No se pudo crear el usuario:</p>
+                                <ul class="mb-0 small ps-3">
+                                    @foreach($errors->createUser->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
+                        @if($errors->updateUser->any())
+                            <div class="alert alert-danger border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                                <p class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i> No se pudo actualizar el usuario:</p>
+                                <ul class="mb-0 small ps-3">
+                                    @foreach($errors->updateUser->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
 
                         @if($errors->any())
                             <div class="alert alert-danger border-0 shadow-sm mb-4" style="border-radius: 12px;">
@@ -430,7 +785,7 @@
                             </div>
                         @endif
 
-                        <div class="collapse mb-4 {{ $activeTab === 'usuarios' && $errors->any() ? 'show' : '' }}" id="crearUsuarioForm">
+                        <div class="collapse mb-4 {{ $activeTab === 'usuarios' && $errors->createUser->any() ? 'show' : '' }}" id="crearUsuarioForm">
                             <div class="dashboard-card shadow-sm">
                                 <form action="{{ route('admin.usuarios.store', ['tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST">
                                     @csrf
@@ -495,7 +850,9 @@
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    @if($user->id === auth()->id())
+                                                    @if($user->trashed())
+                                                        <span class="badge bg-danger-subtle text-danger">Inactivo</span>
+                                                    @elseif($user->id === auth()->id())
                                                         <span class="badge bg-dark-subtle text-dark">Tu cuenta</span>
                                                     @else
                                                         <span class="badge bg-success-subtle text-success">Activo</span>
@@ -505,24 +862,35 @@
                                                 <td class="text-end">
                                                     @if($user->isAdmin())
                                                         <div class="d-inline-flex flex-wrap justify-content-end gap-2">
-                                                            <button type="button" class="btn btn-sm btn-outline-dark px-3" style="border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#editarUsuarioModal{{ $user->id }}">
-                                                                Editar
-                                                            </button>
-                                                            <form action="{{ route('admin.usuarios.reset-password', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;">
-                                                                @csrf
-                                                                <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
-                                                                <button type="submit" class="btn btn-sm btn-outline-warning" style="border-radius: 8px;" onclick="return confirm('¿Generar una nueva contraseña temporal para {{ $user->name }}?');">
-                                                                    Resetear clave
+                                                            @if($user->trashed())
+                                                                <form action="{{ route('admin.usuarios.restore', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;">
+                                                                    @csrf
+                                                                    @method('PATCH')
+                                                                    <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
+                                                                    <button type="submit" class="btn btn-sm btn-outline-success" style="border-radius: 8px;">
+                                                                        Activar
+                                                                    </button>
+                                                                </form>
+                                                            @else
+                                                                <button type="button" class="btn btn-sm btn-outline-dark px-3" style="border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#editarUsuarioModal{{ $user->id }}">
+                                                                    Editar
                                                                 </button>
-                                                            </form>
-                                                            <form action="{{ route('admin.usuarios.destroy', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro querés eliminar a este usuario?');">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
-                                                                <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px;" {{ $user->id === auth()->id() ? 'disabled' : '' }}>
-                                                                    Eliminar
-                                                                </button>
-                                                            </form>
+                                                                <form action="{{ route('admin.usuarios.reset-password', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;">
+                                                                    @csrf
+                                                                    <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
+                                                                    <button type="submit" class="btn btn-sm btn-outline-warning" style="border-radius: 8px;" onclick="return confirm('¿Generar una nueva contraseña temporal para {{ $user->name }}?');">
+                                                                        Resetear clave
+                                                                    </button>
+                                                                </form>
+                                                                <form action="{{ route('admin.usuarios.destroy', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro querés eliminar a este usuario?');">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
+                                                                    <button type="submit" class="btn btn-sm btn-outline-danger" style="border-radius: 8px;" {{ $user->id === auth()->id() ? 'disabled' : '' }}>
+                                                                        Eliminar
+                                                                    </button>
+                                                                </form>
+                                                            @endif
                                                         </div>
                                                     @else
                                                         <span class="text-muted small italic"><i class="bi bi-shield-lock me-1"></i>Sin acciones</span>
@@ -530,6 +898,7 @@
                                                 </td>
                                             </tr>
 
+                                            @if($user->isAdmin() && ! $user->trashed())
                                             <div class="modal fade" id="editarUsuarioModal{{ $user->id }}" tabindex="-1" aria-labelledby="editarUsuarioModalLabel{{ $user->id }}" aria-hidden="true">
                                                 <div class="modal-dialog modal-lg modal-dialog-centered">
                                                     <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden;">
@@ -580,6 +949,7 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            @endif
                                         @empty
                                             <tr><td colspan="6" class="text-center py-4 text-muted small">No hay usuarios activos para el filtro seleccionado.</td></tr>
                                         @endforelse
@@ -827,6 +1197,12 @@
                 return form.querySelector('input[name="role_filter"]');
             });
 
+            const closeDashboardFlashAlerts = () => {
+                document.querySelectorAll('.dashboard-flash-alert').forEach((alertEl) => {
+                    alertEl.remove();
+                });
+            };
+
             const getSelectedRoleFilter = () => {
                 if (!userRoleFilterSelect || !userRoleFilterSelect.value) {
                     return currentRoleFilter || 'todos';
@@ -884,21 +1260,25 @@
             }
 
             if (userRoleFilterForm && userRoleFilterSelect) {
+                const applyUserRoleFilter = () => {
+                    const url = new URL(userRoleFilterForm.action, window.location.origin);
+                    url.searchParams.set('tab', 'usuarios');
+                    url.searchParams.set('rol', getSelectedRoleFilter());
+
+                    window.location.assign(url.toString());
+                };
+
                 userRoleFilterSelect.addEventListener('change', () => {
                     currentRoleFilter = getSelectedRoleFilter();
                     syncUserActionFilters();
+                    applyUserRoleFilter();
                 });
 
                 userRoleFilterForm.addEventListener('submit', (event) => {
                     event.preventDefault();
                     currentRoleFilter = getSelectedRoleFilter();
                     syncUserActionFilters();
-
-                    const url = new URL(userRoleFilterForm.action, window.location.origin);
-                    url.searchParams.set('tab', 'usuarios');
-                    url.searchParams.set('rol', getSelectedRoleFilter());
-
-                    window.location.assign(url.toString());
+                    applyUserRoleFilter();
                 });
             }
 
@@ -910,6 +1290,8 @@
 
             document.querySelectorAll('#adminTab button[data-bs-toggle="tab"]').forEach((button) => {
                 button.addEventListener('shown.bs.tab', (event) => {
+                    closeDashboardFlashAlerts();
+
                     const tabId = event.target.id.replace('-tab', '');
                     const url = new URL(window.location.href);
 
@@ -980,10 +1362,56 @@
             }
         }
 
+        function toggleEditNuevaCategoriaInput(productId) {
+            const select = document.getElementById(`edit_categoria_id_${productId}`);
+            const contenedor = document.getElementById(`edit_contenedor_nueva_categoria_${productId}`);
+            const input = document.getElementById(`edit_nueva_categoria_${productId}`);
+
+            if (!select || !contenedor || !input) {
+                return;
+            }
+
+            if (select.value === 'nueva') {
+                contenedor.classList.remove('d-none');
+                input.required = true;
+                input.focus();
+            } else {
+                contenedor.classList.add('d-none');
+                input.required = false;
+                input.value = '';
+            }
+        }
+
+        function toggleEditComboProductsInput(productId) {
+            const esCombo = document.getElementById(`edit_es_combo_${productId}`);
+            const contenedor = document.getElementById(`edit_contenedor_productos_combo_${productId}`);
+
+            if (!esCombo || !contenedor) {
+                return;
+            }
+
+            if (esCombo.checked) {
+                contenedor.classList.remove('d-none');
+            } else {
+                contenedor.classList.add('d-none');
+                const checkboxes = contenedor.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = false);
+            }
+        }
+
         // Inicializar el estado de los inputs dinámicos en el modal cuando se muestra
         document.getElementById('crearProductoModal')?.addEventListener('show.bs.modal', function () {
             toggleModalNuevaCategoriaInput();
             toggleModalComboProductsInput();
+        });
+
+        // Inicializar estado de campos dinámicos al abrir cada modal de edición
+        document.querySelectorAll('[id^="editarProductoModal"]').forEach((modalEl) => {
+            modalEl.addEventListener('show.bs.modal', function () {
+                const productId = modalEl.id.replace('editarProductoModal', '');
+                toggleEditNuevaCategoriaInput(productId);
+                toggleEditComboProductsInput(productId);
+            });
         });
     </script>
 </body>

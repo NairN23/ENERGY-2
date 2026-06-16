@@ -239,7 +239,7 @@
 
 @if(session('success'))
     <div class="container mt-3">
-        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-radius: 12px;">
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm global-flash-alert" role="alert" style="border-radius: 12px;">
             <i class="bi bi-check-circle-fill me-2"></i> <strong>{{ session('success') }}</strong>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -247,7 +247,7 @@
 @endif
 @if(session('error'))
     <div class="container mt-3">
-        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert" style="border-radius: 12px;">
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm global-flash-alert" role="alert" style="border-radius: 12px;">
             <i class="bi bi-exclamation-triangle-fill me-2"></i> <strong>{{ session('error') }}</strong>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -378,5 +378,53 @@
         if (event.key === 'energy_cart') {
             syncCartBadge();
         }
+    });
+
+    /**
+     * ALERTAS FLASH GLOBALES
+     * Se cierran solas y también al navegar/cambiar vista.
+     */
+    document.addEventListener('DOMContentLoaded', () => {
+        const flashAlerts = Array.from(document.querySelectorAll('.global-flash-alert'));
+
+        if (flashAlerts.length === 0) {
+            return;
+        }
+
+        const closeAlert = (alertEl) => {
+            if (!alertEl || !alertEl.isConnected) {
+                return;
+            }
+
+            if (window.bootstrap && window.bootstrap.Alert) {
+                window.bootstrap.Alert.getOrCreateInstance(alertEl).close();
+            } else {
+                alertEl.remove();
+            }
+        };
+
+        const closeAllAlerts = () => {
+            flashAlerts.forEach(closeAlert);
+        };
+
+        // Autocierre después de unos segundos para no dejar ruido visual.
+        flashAlerts.forEach((alertEl) => {
+            setTimeout(() => closeAlert(alertEl), 4500);
+        });
+
+        document.querySelectorAll('a[href]').forEach((link) => {
+            link.addEventListener('click', () => {
+                const href = (link.getAttribute('href') || '').trim();
+
+                if (!href || href === '#' || href.startsWith('javascript:')) {
+                    return;
+                }
+
+                closeAllAlerts();
+            });
+        });
+
+        document.addEventListener('submit', closeAllAlerts, true);
+        window.addEventListener('pagehide', closeAllAlerts);
     });
 </script>

@@ -93,12 +93,15 @@
                                         <select id="direccion_guardada_id" class="form-select form-select-sm" style="border-radius: 10px;" onchange="cargarDireccionGuardada()">
                                             <option value="">-- Seleccionar una dirección guardada --</option>
                                             @foreach($direccionesGuardadas as $dir)
+                                                @php
+                                                    $direccionLimpia = preg_replace('/\s*\([^)]*\)/', '', $dir->direccion_entrega ?? '');
+                                                @endphp
                                                 <option value="{{ $dir->id }}" 
                                                         data-nombre="{{ $dir->cliente_nombre }}" 
                                                         data-telefono="{{ $dir->cliente_telefono }}" 
                                                         data-email="{{ $dir->cliente_email }}" 
-                                                        data-direccion="{{ $dir->direccion_entrega }}">
-                                                    {{ $dir->direccion_entrega }} (Tel: {{ $dir->cliente_telefono }})
+                                                        data-direccion="{{ $direccionLimpia }}">
+                                                    {{ $direccionLimpia }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -294,6 +297,10 @@
     <script>
         let cartTotal = 0;
 
+        function limpiarDireccionConParentesis(texto) {
+            return (texto || '').replace(/\s*\([^)]*\)/g, '').trim();
+        }
+
         function cargarDireccionGuardada() {
             const select = document.getElementById('direccion_guardada_id');
             if (!select) return;
@@ -303,7 +310,7 @@
             document.getElementById('cliente_nombre').value = option.getAttribute('data-nombre') || '';
             document.getElementById('cliente_telefono').value = option.getAttribute('data-telefono') || '';
             document.getElementById('cliente_email').value = option.getAttribute('data-email') || '';
-            document.getElementById('direccion_entrega').value = option.getAttribute('data-direccion') || '';
+            document.getElementById('direccion_entrega').value = limpiarDireccionConParentesis(option.getAttribute('data-direccion'));
         }
 
         function eliminarDireccionGuardada() {

@@ -54,6 +54,11 @@
         .login-input.is-invalid { border-color: #dc3545 !important; background-color: #fff8f8; }
         .login-input.is-valid { border-color: #198754 !important; background-color: #f8fff8; }
 
+        /* Ocultar ícono de error de Bootstrap en campos con toggle de contraseña */
+        .position-relative .login-input.is-invalid {
+            background-image: none !important;
+        }
+
         /* Título principal del panel visual izquierdo */
         .login-visual-title {
             margin-top: 1.25rem;
@@ -249,16 +254,32 @@
                             <div class="row g-2 mb-2">
                                 <div class="col-sm-6">
                                     <label for="password" class="login-label">Contraseña</label>
-                                    <input id="password" name="password" type="password" class="form-control login-input @error('password') is-invalid @enderror" placeholder="Mínimo 8 caracteres" required>
-                                    @error('password') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <div class="position-relative">
+                                        <input id="password" name="password" type="password" class="form-control login-input @error('password') is-invalid @enderror" placeholder="Mínimo 8 caracteres" required>
+                                        <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2 border-0" id="togglePassword" style="background: none; color: #666;">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                    @error('password') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-sm-6">
                                     <label for="password_confirmation" class="login-label">Confirmar Contraseña</label>
-                                    <input id="password_confirmation" name="password_confirmation" type="password" class="form-control login-input" placeholder="Repetí tu contraseña" required>
+                                    <div class="position-relative">
+                                        <input id="password_confirmation" name="password_confirmation" type="password" class="form-control login-input" placeholder="Repetí tu contraseña" required>
+                                        <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2 border-0" id="togglePasswordConfirm" style="background: none; color: #666;">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="section-divider">Datos de envío</div>
+
+                            <div class="mb-2">
+                                <label for="telefono" class="login-label">Número de Teléfono</label>
+                                <input id="telefono" name="telefono" type="text" class="form-control login-input @error('telefono') is-invalid @enderror" placeholder="Ej: 3875434770" value="{{ old('telefono') }}" inputmode="numeric" required>
+                                @error('telefono') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
 
                             <div class="mb-2">
                                 <label for="direccion" class="login-label">Dirección (Calle y Número)</label>
@@ -268,9 +289,9 @@
 
                             <div class="row g-2 mb-4">
                                 <div class="col-sm-5">
-                                    <label for="ciudad" class="login-label">Ciudad</label>
-                                    <input id="ciudad" name="ciudad" type="text" class="form-control login-input @error('ciudad') is-invalid @enderror" placeholder="Corrientes" value="{{ old('ciudad') }}" required>
-                                    @error('ciudad') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <label for="departamento" class="login-label">Departamento</label>
+                                    <input id="departamento" name="departamento" type="text" class="form-control login-input @error('departamento') is-invalid @enderror" placeholder="Corrientes" value="{{ old('departamento') }}" required>
+                                    @error('departamento') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="col-sm-4">
                                     <label for="provincia" class="login-label">Provincia</label>
@@ -308,6 +329,7 @@
     @include('partials.footer')
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script>
         // Cargar correos guardados en la computadora
         document.addEventListener('DOMContentLoaded', function() {
@@ -318,14 +340,200 @@
                 option.value = email;
                 datalist.appendChild(option);
             });
+
+            // Toggle de visualización de contraseña
+            const togglePassword = document.getElementById('togglePassword');
+            const togglePasswordConfirm = document.getElementById('togglePasswordConfirm');
+            const passwordInput = document.getElementById('password');
+            const passwordConfirmInput = document.getElementById('password_confirmation');
+
+            togglePassword?.addEventListener('click', function(e) {
+                e.preventDefault();
+                const type = passwordInput.type === 'password' ? 'text' : 'password';
+                passwordInput.type = type;
+                this.querySelector('i').classList.toggle('bi-eye');
+                this.querySelector('i').classList.toggle('bi-eye-slash');
+            });
+
+            togglePasswordConfirm?.addEventListener('click', function(e) {
+                e.preventDefault();
+                const type = passwordConfirmInput.type === 'password' ? 'text' : 'password';
+                passwordConfirmInput.type = type;
+                this.querySelector('i').classList.toggle('bi-eye');
+                this.querySelector('i').classList.toggle('bi-eye-slash');
+            });
         });
 
         // Evento que analiza el envío del formulario
         const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const passwordConfirmInput = document.getElementById('password_confirmation');
+        const telefonoInput = document.getElementById('telefono');
+        const departamentoInput = document.getElementById('departamento');
+        const cpInput = document.getElementById('cp');
         const registerForm = document.getElementById('registerForm');
-        
+
+        // Función para validar formato de email
+        function validarFormatoEmail(email) {
+            const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return regex.test(email);
+        }
+
+        // Función para validar que solo tenga letras y espacios
+        function validarSoloLetras(texto) {
+            return /^[a-záéíóúñA-ZÁÉÍÓÚÑ\s]+$/.test(texto);
+        }
+
+        // Función para validar que solo tenga números
+        function validarSoloNumeros(texto) {
+            return /^\d+$/.test(texto);
+        }
+
+        // Validar teléfono: solo números
+        telefonoInput?.addEventListener('blur', function () {
+            const valor = this.value.trim();
+            if (valor && !validarSoloNumeros(valor)) {
+                this.classList.add('is-invalid');
+                alert('El teléfono solo puede contener números.');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        // Evento que valida el email en tiempo real cuando pierde el foco
+        emailInput?.addEventListener('blur', async function () {
+            const email = this.value.trim();
+
+            if (!email) {
+                emailInput.classList.remove('is-invalid', 'is-valid');
+                return;
+            }
+
+            // Validar formato de email
+            if (!validarFormatoEmail(email)) {
+                emailInput.classList.add('is-invalid');
+                emailInput.classList.remove('is-valid');
+                return;
+            }
+
+            // Verificar si el email ya existe en la BD
+            try {
+                const response = await fetch('/verificar-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const data = await response.json();
+
+                if (data.existe) {
+                    emailInput.classList.add('is-invalid');
+                    emailInput.classList.remove('is-valid');
+                    // Mostrar mensaje de error
+                    const errorMsg = emailInput.nextElementSibling;
+                    if (errorMsg && errorMsg.classList.contains('invalid-feedback')) {
+                        errorMsg.textContent = data.mensaje;
+                        errorMsg.style.display = 'block';
+                    }
+                } else {
+                    emailInput.classList.remove('is-invalid');
+                    emailInput.classList.add('is-valid');
+                    const errorMsg = emailInput.nextElementSibling;
+                    if (errorMsg && errorMsg.classList.contains('invalid-feedback')) {
+                        errorMsg.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Error verificando email:', error);
+            }
+        });
+
+        // Validar departamento: solo letras
+        departamentoInput?.addEventListener('blur', function () {
+            const valor = this.value.trim();
+            if (valor && !validarSoloLetras(valor)) {
+                this.classList.add('is-invalid');
+                alert('El departamento solo puede contener letras.');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        // Validar CP: solo números
+        cpInput?.addEventListener('blur', function () {
+            const valor = this.value.trim();
+            if (valor && !validarSoloNumeros(valor)) {
+                this.classList.add('is-invalid');
+                alert('El código postal solo puede contener números.');
+            } else {
+                this.classList.remove('is-invalid');
+            }
+        });
+
         if (registerForm && emailInput) {
             registerForm.addEventListener('submit', function (event) {
+                // Validar email: formato correcto
+                const email = emailInput.value.trim();
+                if (!validarFormatoEmail(email)) {
+                    event.preventDefault();
+                    emailInput.classList.add('is-invalid');
+                    alert('Por favor ingresá un correo electrónico válido.');
+                    return false;
+                }
+
+                // Validar email: no esté duplicado
+                if (emailInput.classList.contains('is-invalid')) {
+                    event.preventDefault();
+                    alert('Este correo ya está registrado. Usá otro correo electrónico.');
+                    return false;
+                }
+
+                // Validar departamento: solo letras
+                const departamento = departamentoInput?.value.trim();
+                if (departamento && !validarSoloLetras(departamento)) {
+                    event.preventDefault();
+                    departamentoInput.classList.add('is-invalid');
+                    alert('El departamento solo puede contener letras.');
+                    return false;
+                }
+
+                // Validar teléfono: solo números
+                const telefono = telefonoInput?.value.trim();
+                if (telefono && !validarSoloNumeros(telefono)) {
+                    event.preventDefault();
+                    telefonoInput.classList.add('is-invalid');
+                    alert('El teléfono solo puede contener números.');
+                    return false;
+                }
+
+                // Validar CP: solo números
+                const cp = cpInput?.value.trim();
+                if (cp && !validarSoloNumeros(cp)) {
+                    event.preventDefault();
+                    cpInput.classList.add('is-invalid');
+                    alert('El código postal solo puede contener números.');
+                    return false;
+                }
+
+                // Validar contraseña: mínimo 8 caracteres
+                if (passwordInput.value.length < 8) {
+                    event.preventDefault();
+                    passwordInput.classList.add('is-invalid');
+                    alert('La contraseña debe tener al menos 8 caracteres.');
+                    return false;
+                }
+
+                // Validar que las contraseñas coincidan
+                if (passwordInput.value !== passwordConfirmInput.value) {
+                    event.preventDefault();
+                    passwordConfirmInput.classList.add('is-invalid');
+                    alert('Las contraseñas no coinciden.');
+                    return false;
+                }
+
                 // Guardar el correo en localStorage para próximas visitas
                 const currentEmail = emailInput.value.trim().toLowerCase();
                 if (currentEmail) {

@@ -42,7 +42,13 @@ class ProductoController extends Controller
             'descripcion' => 'nullable|string',
             'imagen' => 'nullable|image|max:4096',
             'es_combo' => 'nullable|boolean',
+            'productos_combo' => 'required_if:es_combo,1|array|min:1',
+            'productos_combo.*' => 'exists:productos,id',
             'stock' => 'nullable|integer|min:0',
+        ], [
+            'productos_combo.required_if' => 'Si marcás "Es un Combo", tenés que seleccionar al menos un producto incluido.',
+            'productos_combo.min' => 'Seleccioná al menos un producto para armar el combo.',
+            'productos_combo.*.exists' => 'Uno de los productos seleccionados para el combo no existe.',
         ]);
 
         if ($request->categoria_id === 'nueva') {
@@ -64,20 +70,23 @@ class ProductoController extends Controller
             $rutaImagen = '/images/productos/' . $nombreImagen;
         }
 
+        $stockValue = $request->stock ?? 0;
+
         // Guardamos en MariaDB usando los campos en español
-        Producto::create([
+        $producto = Producto::create([
             'nombre' => $request->nombre,
             'categoria_id' => $categoriaId,
             'precio' => $request->precio,
             'descripcion' => $request->descripcion,
             'imagen' => $rutaImagen,
             'es_combo' => $request->has('es_combo') ? true : false,
-            'activo' => $request->has('activo') ? true : false,
+            'activo' => $request->has('activo') && $stockValue > 0,
             'productos_combo' => $request->has('es_combo') ? $request->productos_combo : null,
-            'stock' => $request->stock ?? 0,
+            'stock' => $stockValue,
         ]);
 
-        return redirect()->route('admin.index')->with('success', '¡Producto cargado con éxito en la base de datos!');
+        return redirect()->route('admin.index', ['tab' => 'productos'])
+            ->with('success', '¡Producto cargado con éxito! (' . $producto->nombre . ')');
     }
 
     /**
@@ -105,7 +114,13 @@ class ProductoController extends Controller
             'descripcion' => 'nullable|string',
             'imagen' => 'nullable|image|max:4096',
             'es_combo' => 'nullable|boolean',
+            'productos_combo' => 'required_if:es_combo,1|array|min:1',
+            'productos_combo.*' => 'exists:productos,id',
             'stock' => 'nullable|integer|min:0',
+        ], [
+            'productos_combo.required_if' => 'Si marcás "Es un Combo", tenés que seleccionar al menos un producto incluido.',
+            'productos_combo.min' => 'Seleccioná al menos un producto para armar el combo.',
+            'productos_combo.*.exists' => 'Uno de los productos seleccionados para el combo no existe.',
         ]);
 
         if ($request->categoria_id === 'nueva') {
@@ -132,6 +147,8 @@ class ProductoController extends Controller
             $rutaImagen = '/images/productos/' . $nombreImagen;
         }
 
+        $stockValue = $request->stock ?? 0;
+
         // Actualizamos en MariaDB
         $producto->update([
             'nombre' => $request->nombre,
@@ -140,12 +157,12 @@ class ProductoController extends Controller
             'descripcion' => $request->descripcion,
             'imagen' => $rutaImagen,
             'es_combo' => $request->has('es_combo') ? true : false,
-            'activo' => $request->has('activo') ? true : false,
+            'activo' => $request->has('activo') && $stockValue > 0,
             'productos_combo' => $request->has('es_combo') ? $request->productos_combo : null,
-            'stock' => $request->stock ?? 0,
+            'stock' => $stockValue,
         ]);
 
-        return redirect()->route('admin.index')->with('success', '¡Producto modificado con éxito!');
+        return redirect()->route('admin.index', ['tab' => 'productos'])->with('success', '¡Producto modificado con éxito!');
     }
 
     /**

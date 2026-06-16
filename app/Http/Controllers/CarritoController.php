@@ -9,6 +9,58 @@ use App\Models\Carrito; // Asegurate de importar tu modelo de Carrito
 class CarritoController extends Controller
 {
     /**
+     * Desactiva combos activos que tengan al menos un componente sin stock.
+     */
+    private function desactivarCombosConComponentesSinStock(): void
+    {
+        $combosActivos = \App\Models\Producto::where('es_combo', true)
+            ->where('activo', true)
+            ->get();
+
+        foreach ($combosActivos as $combo) {
+            $componentes = is_array($combo->productos_combo) ? $combo->productos_combo : [];
+
+            if (empty($componentes)) {
+                continue;
+            }
+
+            $hayComponenteSinStock = \App\Models\Producto::whereIn('id', $componentes)
+                ->where('stock', '<=', 0)
+                ->exists();
+
+            if ($hayComponenteSinStock) {
+                $combo->update(['activo' => false]);
+            }
+        }
+    }
+
+    /**
+     * Reactiva combos inactivos cuando todos sus componentes tienen stock.
+     */
+    private function reactivarCombosConComponentesConStock(): void
+    {
+        $combosInactivos = \App\Models\Producto::where('es_combo', true)
+            ->where('activo', false)
+            ->get();
+
+        foreach ($combosInactivos as $combo) {
+            $componentes = is_array($combo->productos_combo) ? $combo->productos_combo : [];
+
+            if (empty($componentes) || $combo->stock <= 0) {
+                continue;
+            }
+
+            $faltantes = \App\Models\Producto::whereIn('id', $componentes)
+                ->where('stock', '<=', 0)
+                ->exists();
+
+            if (! $faltantes) {
+                $combo->update(['activo' => true]);
+            }
+        }
+    }
+
+    /**
      * Muestra la vista del carrito y pasa los datos de MariaDB
      */
     public function index()
@@ -303,8 +355,16 @@ class CarritoController extends Controller
             $p = \App\Models\Producto::find($prodId);
             if ($p) {
                 $p->decrement('stock', $reqQty);
+                $p->refresh();
+
+                if ($p->stock <= 0 && $p->activo) {
+                    $p->update(['activo' => false]);
+                }
             }
         }
+
+        // Si un componente quedó sin stock, su combo debe quedar inactivo automáticamente.
+        $this->desactivarCombosConComponentesSinStock();
 
         // Vaciar el carrito en MariaDB si el usuario está autenticado
         if (Auth::check()) {
@@ -471,6 +531,10 @@ class CarritoController extends Controller
             if ($producto) {
                 // Devolvemos el stock del producto principal
                 $producto->increment('stock', $detalle->cantidad);
+                $producto->refresh();
+                if ($producto->stock > 0 && ! $producto->activo) {
+                    $producto->update(['activo' => true]);
+                }
 
                 // Si es un combo, devolvemos el stock de sus componentes
                 if ($producto->es_combo && is_array($producto->productos_combo)) {
@@ -478,11 +542,18 @@ class CarritoController extends Controller
                         $subProd = \App\Models\Producto::find($subId);
                         if ($subProd) {
                             $subProd->increment('stock', $detalle->cantidad);
+                            $subProd->refresh();
+                            if ($subProd->stock > 0 && ! $subProd->activo) {
+                                $subProd->update(['activo' => true]);
+                            }
                         }
                     }
                 }
             }
         }
+
+        // Tras restaurar stock, intentamos reactivar combos que vuelvan a tener todos sus componentes disponibles.
+        $this->reactivarCombosConComponentesConStock();
 
         $pedido->update(['estado' => 'cancelado']);
 
