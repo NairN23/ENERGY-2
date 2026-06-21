@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+})->purpose('Mostrar una frase inspiradora');
 
 Artisan::command('users:fill-missing-phone {phone=0000000000}', function (string $phone) {
     if (! preg_match('/^[0-9]{8,15}$/', $phone)) {

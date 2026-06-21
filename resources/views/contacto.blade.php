@@ -52,12 +52,12 @@
             <div class="col-md-5">
                 <h4 class="fw-bold mb-4">¡Hola! Gracias por elegir <span class="text-danger">ENERGY</span>.</h4>
                 <div class="mb-4">
-                    <p><i class="bi bi-telephone text-danger me-2"></i> 3794576548</p>
-                    <p><i class="bi bi-geo-alt text-danger me-2"></i> Salta 560, Corrientes Capital</p>
-                    <p><i class="bi bi-instagram text-danger me-2"></i> @energy.nutricion</p>
+                    <p><i class="bi bi-telephone text-danger me-2"></i> {!! \App\Models\PaginaContenido::getValor('contacto_telefono', '3794576548') !!}</p>
+                    <p><i class="bi bi-geo-alt text-danger me-2"></i> {!! \App\Models\PaginaContenido::getValor('contacto_direccion', 'Salta 560, Corrientes Capital') !!}</p>
+                    <p><i class="bi bi-instagram text-danger me-2"></i> {!! \App\Models\PaginaContenido::getValor('contacto_instagram', '@energy.nutricion') !!}</p>
                 </div>
                 <div class="small-map-box">
-                    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3540.04505417833!2d-58.8373188!3d-27.4678255!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94456ca4237d8001%3A0x6734151a37c86576!2sSalta%20560%2C%20W3400%20Corrientes!5e0!3m2!1ses-419!2sar!4v1713554400000!5m2!1ses-419!2sar" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                    <iframe src="{!! \App\Models\PaginaContenido::getValor('contacto_mapa_url', 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3540.04505417833!2d-58.8373188!3d-27.4678255!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94456ca4237d8001%3A0x6734151a37c86576!2sSalta%20560%2C%20W3400%20Corrientes!5e0!3m2!1ses-419!2sar!4v1713554400000!5m2!1ses-419!2sar') !!}" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
                 </div>
             </div>
 
@@ -66,13 +66,20 @@
                     @csrf
                     
                     {{-- SI EL USUARIO ESTÁ LOGUEADO: Campos invisibles autocompletados y saludo personalizado --}}
+                    {{-- Si el usuario es administrador, se le informa que el envío de consultas está inhabilitado y es solo vista de diseño --}}
                     @auth
                         <input type="hidden" name="nombre" value="{{ auth()->user()->name }}">
                         <input type="hidden" name="email" value="{{ auth()->user()->email }}">
 
-                        <div class="alert alert-dark mb-4" style="border-radius: 10px; font-size: 0.92rem; background-color: #1a1a1a; color: #fff; border: none;">
-                            <i class="bi bi-person-fill me-2 text-danger"></i> Conectado como <strong>{{ auth()->user()->name }}</strong>. Envianos tu consulta directamente abajo.
-                        </div>
+                        @if(auth()->user()->isAdmin())
+                            <div class="alert alert-dark mb-4" style="border-radius: 10px; font-size: 0.92rem; background-color: #1a1a1a; color: #fff; border: none;">
+                                <i class="bi bi-eye-fill me-2 text-danger"></i> Conectado como <strong>{{ auth()->user()->name }} (Admin)</strong>. Vista de diseño para el cliente (Envío deshabilitado).
+                            </div>
+                        @else
+                            <div class="alert alert-dark mb-4" style="border-radius: 10px; font-size: 0.92rem; background-color: #1a1a1a; color: #fff; border: none;">
+                                <i class="bi bi-person-fill me-2 text-danger"></i> Conectado como <strong>{{ auth()->user()->name }}</strong>. Envianos tu consulta directamente abajo.
+                            </div>
+                        @endif
                     @endauth
 
                     {{-- SI EL USUARIO ES VISITANTE: Se dibujan todos los inputs con sus validaciones en tiempo real --}}
@@ -102,25 +109,30 @@
                         </div>
                     @endguest
 
-                    {{-- Asunto --}}
+                    {{-- Asunto: Se deshabilita si el usuario es administrador --}}
                     <div class="mb-3">
                         <label class="form-label fw-bold small">ASUNTO</label>
-                        <input type="text" name="asunto" class="form-control" placeholder="Tema de tu consulta" minlength="3" maxlength="150" required>
+                        <input type="text" name="asunto" class="form-control" placeholder="Tema de tu consulta" minlength="3" maxlength="150" @if(auth()->check() && auth()->user()->isAdmin()) disabled @endif required>
                         @error('asunto')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    {{-- El cuadro de mensaje lo ven siempre ambos estados --}}
+                    {{-- Mensaje: Se deshabilita si el usuario es administrador --}}
                     <div class="mb-4">
                         <label class="form-label fw-bold small">MENSAJE</label>
-                        <textarea name="contenido" class="form-control" rows="4" placeholder="¿En qué te ayudamos?" minlength="10" maxlength="2000" required></textarea>
+                        <textarea name="contenido" class="form-control" rows="4" placeholder="¿En qué te ayudamos?" minlength="10" maxlength="2000" @if(auth()->check() && auth()->user()->isAdmin()) disabled @endif required></textarea>
                         @error('contenido')
                             <div class="text-danger small mt-1">{{ $message }}</div>
                         @enderror
                     </div>
                     
-                    <button type="submit" class="btn btn-enviar w-100">ENVIAR CONSULTA</button>
+                    {{-- Botón de envío: Se deshabilita para administradores para evitar envíos de prueba --}}
+                    @if(auth()->check() && auth()->user()->isAdmin())
+                        <button type="button" class="btn btn-enviar w-100 bg-secondary text-white-50" style="cursor: not-allowed;" disabled>ENVIAR CONSULTA (Deshabilitado para Administradores)</button>
+                    @else
+                        <button type="submit" class="btn btn-enviar w-100">ENVIAR CONSULTA</button>
+                    @endif
                 </form>
             </div>
         </div>

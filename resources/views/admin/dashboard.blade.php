@@ -872,16 +872,10 @@
                                                                     </button>
                                                                 </form>
                                                             @else
+                                                                {{-- Acciones del administrador: Editar (que incluye cambio de clave) y Eliminar --}}
                                                                 <button type="button" class="btn btn-sm btn-outline-dark px-3" style="border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#editarUsuarioModal{{ $user->id }}">
                                                                     Editar
                                                                 </button>
-                                                                <form action="{{ route('admin.usuarios.reset-password', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;">
-                                                                    @csrf
-                                                                    <input type="hidden" name="role_filter" value="{{ $roleFilter }}">
-                                                                    <button type="submit" class="btn btn-sm btn-outline-warning" style="border-radius: 8px;" onclick="return confirm('¿Generar una nueva contraseña temporal para {{ $user->name }}?');">
-                                                                        Resetear clave
-                                                                    </button>
-                                                                </form>
                                                                 <form action="{{ route('admin.usuarios.destroy', ['usuario' => $user->id, 'tab' => 'usuarios', 'rol' => $roleFilter]) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Seguro querés eliminar a este usuario?');">
                                                                     @csrf
                                                                     @method('DELETE')
@@ -974,6 +968,9 @@
                                     </button>
                                     <button class="list-group-item list-group-item-action text-uppercase fw-bold p-3 border-0" id="list-logo-list" data-bs-toggle="list" href="#list-logo" role="tab">
                                         <i class="bi bi-image me-2"></i> Logo de la Marca
+                                    </button>
+                                    <button class="list-group-item list-group-item-action text-uppercase fw-bold p-3 border-0" id="list-contacto-list" data-bs-toggle="list" href="#list-contacto" role="tab">
+                                        <i class="bi bi-envelope-fill me-2"></i> Contacto
                                     </button>
                                 </div>
                             </div>
@@ -1080,6 +1077,33 @@
                                                     </form>
                                                 </div>
                                             </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Editar Contacto -->
+                                    {{-- Sección para que el Administrador edite los textos y configuraciones de la página de contacto --}}
+                                    <div class="tab-pane fade" id="list-contacto" role="tabpanel">
+                                        <div class="dashboard-card shadow-sm">
+                                            <h5 class="fw-bold mb-3 text-uppercase border-bottom pb-2">Contenido de la Página de Contacto</h5>
+                                            <form action="/admin/paginas/guardar" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="pagina" value="contacto">
+                                                
+                                                @foreach($paginaContenidos->get('contacto', []) as $cont)
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-bold text-uppercase text-muted">{{ $cont->titulo }}</label>
+                                                        @if(strlen($cont->valor) > 100)
+                                                            <textarea name="{{ $cont->clave }}" class="form-control" rows="3" style="border-radius: 10px;" maxlength="1000" required>{{ $cont->valor }}</textarea>
+                                                        @else
+                                                            <input type="text" name="{{ $cont->clave }}" class="form-control" value="{{ $cont->valor }}" style="border-radius: 10px;" maxlength="1000" required>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+                                                
+                                                <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold text-uppercase mt-2">
+                                                    Guardar Cambios Contacto
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                     

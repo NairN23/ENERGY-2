@@ -16,7 +16,7 @@ class PaginaContenido extends Model
     ];
 
     /**
-     * Helper to get page content value or return a default string if it doesn't exist yet.
+     * Método auxiliar para obtener el valor del contenido de la página o devolver una cadena por defecto si no existe.
      */
     public static function getValor($clave, $default = '')
     {

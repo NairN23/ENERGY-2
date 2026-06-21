@@ -8,7 +8,7 @@ use App\Models\WelcomeSlide;
 class WelcomeSlidesSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Ejecutar las siembras en la base de datos.
      */
     public function run(): void
     {

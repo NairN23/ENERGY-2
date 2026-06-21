@@ -221,17 +221,27 @@
                                 @else
                                     <div class="mb-3 d-none d-lg-block" style="height: 57px;"></div>
                                 @endif
+                                {{-- Sección de Visualización de Stock y Selector de Cantidad --}}
+                                {{-- El stock y los controles solo son visibles para usuarios autenticados (no para visitantes sin registrar) --}}
                                 <div class="mb-3 d-flex align-items-center justify-content-between">
-                                    @if($producto->stock > 0)
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size: 0.7rem;">Stock: {{ $producto->stock }}</span>
-                                        <div class="d-flex align-items-center gap-1 bg-light rounded-pill px-2 py-1" style="border: 1px solid #ddd;">
-                                            <button class="btn btn-xs btn-link p-0 text-dark fw-bold" onclick="decQty({{ $producto->id }})" style="font-size: 0.75rem; text-decoration: none; width: 16px; height: 16px; line-height: 1;">-</button>
-                                            <input type="number" id="qty_{{ $producto->id }}" class="form-control text-center p-0 border-0 bg-transparent" value="1" min="1" max="{{ $producto->stock }}" style="width: 24px; font-size: 0.75rem; height: 16px; box-shadow: none;" readonly>
-                                            <button class="btn btn-xs btn-link p-0 text-dark fw-bold" onclick="incQty({{ $producto->id }}, {{ $producto->stock }})" style="font-size: 0.75rem; text-decoration: none; width: 16px; height: 16px; line-height: 1;">+</button>
-                                        </div>
-                                    @else
-                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1" style="font-size: 0.7rem;">Sin Stock</span>
-                                    @endif
+                                    @auth
+                                        @if($producto->stock > 0)
+                                            {{-- Muestra la etiqueta de stock disponible para usuarios registrados --}}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size: 0.7rem;">Stock: {{ $producto->stock }}</span>
+                                            
+                                            {{-- El selector de cantidad +/- solo se muestra para clientes registrados, no para administradores --}}
+                                            @if(!auth()->user()->isAdmin())
+                                                <div class="d-flex align-items-center gap-1 bg-light rounded-pill px-2 py-1" style="border: 1px solid #ddd;">
+                                                    <button class="btn btn-xs btn-link p-0 text-dark fw-bold" onclick="decQty({{ $producto->id }})" style="font-size: 0.75rem; text-decoration: none; width: 16px; height: 16px; line-height: 1;">-</button>
+                                                    <input type="number" id="qty_{{ $producto->id }}" class="form-control text-center p-0 border-0 bg-transparent" value="1" min="1" max="{{ $producto->stock }}" style="width: 24px; font-size: 0.75rem; height: 16px; box-shadow: none;" readonly>
+                                                    <button class="btn btn-xs btn-link p-0 text-dark fw-bold" onclick="incQty({{ $producto->id }}, {{ $producto->stock }})" style="font-size: 0.75rem; text-decoration: none; width: 16px; height: 16px; line-height: 1;">+</button>
+                                                </div>
+                                            @endif
+                                        @else
+                                            {{-- Muestra la etiqueta de Sin Stock si no hay disponibilidad --}}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1" style="font-size: 0.7rem;">Sin Stock</span>
+                                        @endif
+                                    @endauth
                                 </div>
 
                                 <div class="d-flex justify-content-between align-items-center">
@@ -273,16 +283,16 @@
     @include('partials.footer')
 
     <script>
-        // CATEGORY FILTER LOGIC
+        // LÓGICA DE FILTRADO DE CATEGORÍAS
         document.querySelectorAll('.filter-btn').forEach(button => {
             button.addEventListener('click', () => {
-                // Remove active classes
+                // Quitar clases activas
                 document.querySelectorAll('.filter-btn').forEach(btn => {
                     btn.classList.remove('active', 'btn-dark');
                     btn.classList.add('btn-outline-dark');
                 });
                 
-                // Set active to clicked
+                // Activar el botón seleccionado
                 button.classList.add('active', 'btn-dark');
                 button.classList.remove('btn-outline-dark');
                 

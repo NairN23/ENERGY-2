@@ -123,6 +123,32 @@ class PaginaContenidosSeeder extends Seeder
                 'titulo' => 'Inicio - Slide 3 Título',
                 'valor' => 'ENVÍOS A TODO EL NEA',
             ],
+
+            // --- CONTACTO ---
+            [
+                'pagina' => 'contacto',
+                'clave' => 'contacto_telefono',
+                'titulo' => 'Contacto - Teléfono',
+                'valor' => '3794576548',
+            ],
+            [
+                'pagina' => 'contacto',
+                'clave' => 'contacto_direccion',
+                'titulo' => 'Contacto - Dirección',
+                'valor' => 'Salta 560, Corrientes Capital',
+            ],
+            [
+                'pagina' => 'contacto',
+                'clave' => 'contacto_instagram',
+                'titulo' => 'Contacto - Instagram',
+                'valor' => '@energy.nutricion',
+            ],
+            [
+                'pagina' => 'contacto',
+                'clave' => 'contacto_mapa_url',
+                'titulo' => 'Contacto - Mapa Google (URL del src del iframe)',
+                'valor' => 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3540.04505417833!2d-58.8373188!3d-27.4678255!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94456ca4237d8001%3A0x6734151a37c86576!2sSalta%20560%2C%20W3400%20Corrientes!5e0!3m2!1ses-419!2sar!4v1713554400000!5m2!1ses-419!2sar',
+            ],
         ];
 
         foreach ($contenidos as $cont) {

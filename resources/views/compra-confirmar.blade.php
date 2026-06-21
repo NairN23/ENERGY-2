@@ -90,7 +90,7 @@
                                 <div class="mb-3 p-3 bg-light rounded-3 border">
                                     <label for="direccion_guardada_id" class="form-label small fw-bold text-muted text-uppercase">Direcciones Guardadas</label>
                                     <div class="d-flex gap-2">
-                                        <select id="direccion_guardada_id" class="form-select form-select-sm" style="border-radius: 10px;" onchange="cargarDireccionGuardada()">
+                                        <select id="direccion_guardada_id" class="form-select form-select-sm" style="border-radius: 10px;" onchange="toggleCamposManuales()">
                                             <option value="">-- Seleccionar una dirección guardada --</option>
                                             @foreach($direccionesGuardadas as $dir)
                                                 @php
@@ -104,6 +104,7 @@
                                                     {{ $direccionLimpia }}
                                                 </option>
                                             @endforeach
+                                            <option value="otra">Otra...</option>
                                         </select>
                                         <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarDireccionGuardada()" title="Eliminar dirección" style="border-radius: 10px;">
                                             <i class="bi bi-trash3-fill"></i>
@@ -119,25 +120,28 @@
                             @endphp
                         @endauth
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="cliente_nombre" class="form-label small fw-bold text-muted">Nombre Completo</label>
-                                <input type="text" name="cliente_nombre" id="cliente_nombre" class="form-control" style="border-radius: 10px;" value="{{ old('cliente_nombre', auth()->user()->name ?? '') }}" required>
+                        {{-- Contenedor de campos de dirección manual: se oculta o muestra dinámicamente con JS para evitar duplicación visual --}}
+                        <div id="campos_direccion_manual" class="d-none">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="cliente_nombre" class="form-label small fw-bold text-muted">Nombre Completo</label>
+                                    <input type="text" name="cliente_nombre" id="cliente_nombre" class="form-control" style="border-radius: 10px;" value="{{ old('cliente_nombre', auth()->user()->name ?? '') }}">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="cliente_telefono" class="form-label small fw-bold text-muted">Teléfono de Contacto</label>
+                                    <input type="text" name="cliente_telefono" id="cliente_telefono" class="form-control" style="border-radius: 10px;" placeholder="Ej: 3794123456" value="{{ old('cliente_telefono', $ultimaDireccion->cliente_telefono ?? '') }}">
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="cliente_telefono" class="form-label small fw-bold text-muted">Teléfono de Contacto</label>
-                                <input type="text" name="cliente_telefono" id="cliente_telefono" class="form-control" style="border-radius: 10px;" placeholder="Ej: 3794123456" value="{{ old('cliente_telefono', $ultimaDireccion->cliente_telefono ?? '') }}" required>
+
+                            <div class="mb-3">
+                                <label for="cliente_email" class="form-label small fw-bold text-muted">Correo Electrónico</label>
+                                <input type="email" name="cliente_email" id="cliente_email" class="form-control" style="border-radius: 10px;" value="{{ old('cliente_email', auth()->user()->email ?? '') }}">
                             </div>
-                        </div>
 
-                        <div class="mb-3">
-                            <label for="cliente_email" class="form-label small fw-bold text-muted">Correo Electrónico</label>
-                            <input type="email" name="cliente_email" id="cliente_email" class="form-control" style="border-radius: 10px;" value="{{ old('cliente_email', auth()->user()->email ?? '') }}" required>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="direccion_entrega" class="form-label small fw-bold text-muted">Dirección de Entrega</label>
-                            <textarea name="direccion_entrega" id="direccion_entrega" rows="2" class="form-control" style="border-radius: 10px;" placeholder="Calle, número, barrio y localidad" required>{{ old('direccion_entrega', $ultimaDireccion->direccion_entrega ?? '') }}</textarea>
+                            <div class="mb-4">
+                                <label for="direccion_entrega" class="form-label small fw-bold text-muted">Dirección de Entrega</label>
+                                <textarea name="direccion_entrega" id="direccion_entrega" rows="2" class="form-control" style="border-radius: 10px;" placeholder="Calle, número, barrio y localidad">{{ old('direccion_entrega', $ultimaDireccion->direccion_entrega ?? '') }}</textarea>
+                            </div>
                         </div>
 
                         <hr class="my-4">
@@ -301,16 +305,44 @@
             return (texto || '').replace(/\s*\([^)]*\)/g, '').trim();
         }
 
-        function cargarDireccionGuardada() {
+        function toggleCamposManuales() {
             const select = document.getElementById('direccion_guardada_id');
-            if (!select) return;
-            const option = select.options[select.selectedIndex];
-            if (!option || !option.value) return;
+            const camposManuales = document.getElementById('campos_direccion_manual');
+            if (!camposManuales) return;
+            const inputs = camposManuales.querySelectorAll('input, textarea');
 
-            document.getElementById('cliente_nombre').value = option.getAttribute('data-nombre') || '';
-            document.getElementById('cliente_telefono').value = option.getAttribute('data-telefono') || '';
-            document.getElementById('cliente_email').value = option.getAttribute('data-email') || '';
-            document.getElementById('direccion_entrega').value = limpiarDireccionConParentesis(option.getAttribute('data-direccion'));
+            if (!select) {
+                // Si no hay direcciones guardadas, se muestran los campos manuales y se hacen obligatorios
+                camposManuales.classList.remove('d-none');
+                inputs.forEach(input => input.setAttribute('required', 'required'));
+                return;
+            }
+
+            const val = select.value;
+            if (val === 'otra') {
+                // Mostrar campos manuales y hacerlos obligatorios
+                camposManuales.classList.remove('d-none');
+                inputs.forEach(input => input.setAttribute('required', 'required'));
+                
+                // Limpiar campos para escribir la nueva dirección
+                document.getElementById('cliente_telefono').value = '';
+                document.getElementById('direccion_entrega').value = '';
+            } else if (val !== '') {
+                // Dirección guardada seleccionada: ocultar campos y no hacerlos obligatorios
+                camposManuales.classList.add('d-none');
+                inputs.forEach(input => input.removeAttribute('required'));
+                
+                // Cargar los datos de la dirección guardada
+                const option = select.options[select.selectedIndex];
+                document.getElementById('cliente_nombre').value = option.getAttribute('data-nombre') || '';
+                document.getElementById('cliente_telefono').value = option.getAttribute('data-telefono') || '';
+                document.getElementById('cliente_email').value = option.getAttribute('data-email') || '';
+                document.getElementById('direccion_entrega').value = limpiarDireccionConParentesis(option.getAttribute('data-direccion'));
+            } else {
+                // `-- Seleccionar --`: ocultar campos manuales y remover required
+                camposManuales.classList.add('d-none');
+                inputs.forEach(input => input.removeAttribute('required'));
+            }
         }
 
         function eliminarDireccionGuardada() {
@@ -491,6 +523,13 @@
 
         // Validación final
         document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            // Validar que se haya seleccionado una dirección en el selector
+            const select = document.getElementById('direccion_guardada_id');
+            if (select && select.value === "") {
+                e.preventDefault();
+                mostrarToastCheckout('Por favor selecciona una dirección guardada o la opción "Otra" para ingresar una nueva.', 'error');
+                return;
+            }
             const cart = JSON.parse(localStorage.getItem('energy_cart')) || [];
             if (cart.length === 0) {
                 e.preventDefault();
@@ -540,6 +579,23 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             renderCheckoutCart();
+            
+            const select = document.getElementById('direccion_guardada_id');
+            if (select) {
+                // Si hay direcciones guardadas y no hay errores de validación, seleccionamos la primera por defecto
+                @if(!$errors->any() && !old('cliente_telefono'))
+                    if (select.options.length > 2) {
+                        select.selectedIndex = 1;
+                    }
+                @else
+                    // Si hay errores de validación, forzar vista de campos manuales
+                    select.value = 'otra';
+                @endif
+                toggleCamposManuales();
+            } else {
+                // Si no hay direcciones, inicializar campos como obligatorios y visibles
+                toggleCamposManuales();
+            }
             
             const urlParams = new URLSearchParams(window.location.search);
             const metodo = urlParams.get('metodo');
