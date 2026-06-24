@@ -4,7 +4,7 @@ Bienvenido al repositorio oficial del proyecto **ENERGY**, desarrollado para la 
 
 ---
 
-## 👥 Datos del Proyecto e Integrantes
+## Datos del Proyecto e Integrantes
 
 *   **Título del Proyecto:** ENERGY
 *   **Integrantes:** 
@@ -14,7 +14,7 @@ Bienvenido al repositorio oficial del proyecto **ENERGY**, desarrollado para la 
 
 ---
 
-## 🔑 Credenciales de Acceso de Prueba
+## Credenciales de Acceso de Prueba
 
 Para evaluar los diferentes roles de la plataforma, puede utilizar las siguientes cuentas de prueba:
 
@@ -27,7 +27,7 @@ Para evaluar los diferentes roles de la plataforma, puede utilizar las siguiente
 
 ---
 
-## 📋 Índice General de Contenidos
+## Índice General de Contenidos
 1.  **Guía de Instalación y Base de Datos**
     *   Requisitos de Entorno.
     *   Importación de base de datos MariaDB (SQL Backups).
@@ -43,7 +43,7 @@ Para evaluar los diferentes roles de la plataforma, puede utilizar las siguiente
 
 ---
 
-## 🚀 1. Guía de Instalación y Base de Datos
+## 1. Guía de Instalación y Base de Datos
 
 Sigue estos pasos detallados para configurar y ejecutar el proyecto en tu entorno local.
 
@@ -132,7 +132,7 @@ Abre en tu navegador la dirección: [http://127.0.0.1:8000](http://127.0.0.1:800
 
 ---
 
-## 📝 2. Especificación de Requisitos de Software (ERS)
+## 2. Especificación de Requisitos de Software (ERS)
 
 ### 2.1 Propósito y Alcance del Sistema
 El propósito del sistema es proveer una plataforma e-commerce de suplementos deportivos denominada **ENERGY**. Permite a los clientes interactuar de forma fluida con un catálogo web, gestionar un carrito con persistencia en tiempo real en la base de datos MariaDB, realizar compras seguras con múltiples medios de pago y administrar su historial. Asimismo, dota al equipo administrativo de un Dashboard de control integral para la gestión de productos, combos de productos, stock rápido, usuarios, estados de los pedidos y personalización dinámica del sitio.
@@ -210,7 +210,7 @@ El sistema cuenta con las siguientes entidades principales en MariaDB:
 
 ---
 
-## 📖 3. Manual de Usuario
+## 3. Manual de Usuario
 
 ### 3.1 Experiencia del Cliente
 
